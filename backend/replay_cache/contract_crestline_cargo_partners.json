@@ -1,0 +1,78 @@
+{
+  "data": {
+    "carrier_name": "Crestline Cargo Partners",
+    "contract_reference": "CCP-2026-MSA-312",
+    "effective_date": "2026-01-01",
+    "expiration_date": "2026-12-31",
+    "rules": [
+      {
+        "id": "CCP-RULE-001",
+        "type": "base_discount",
+        "description": "38% linehaul freight discount",
+        "parameters": {
+          "percentage": 0.38
+        },
+        "source_page": 2,
+        "source_quote": "Net freight charges will reflect a thirty-eight percent (38.0%) reduction from benchmark tariff.",
+        "confidence": 0.98,
+        "status": "proposed"
+      },
+      {
+        "id": "CCP-RULE-002",
+        "type": "accessorial_rule",
+        "description": "Liftgate charge capped at $50.00",
+        "parameters": {
+          "fee_type": "liftgate",
+          "allowed": true,
+          "cap": "50.00"
+        },
+        "source_page": 3,
+        "source_quote": "Liftgate equipment assistance will not exceed fifty dollars ($50.00) per bill of lading.",
+        "confidence": 0.97,
+        "status": "proposed"
+      },
+      {
+        "id": "CCP-RULE-003",
+        "type": "minimum_charge",
+        "description": "Minimum freight charge of $60.00",
+        "parameters": {
+          "amount": "60.00"
+        },
+        "source_page": 4,
+        "source_quote": "Shipment floor shall be established at sixty dollars ($60.00) per consignment.",
+        "confidence": 0.96,
+        "status": "proposed"
+      },
+      {
+        "id": "CCP-RULE-004",
+        "type": "duplicate_charge",
+        "description": "No duplicate billings",
+        "parameters": {
+          "enabled": true
+        },
+        "source_page": 5,
+        "source_quote": "Consignments will not be billed more than once.",
+        "confidence": 0.99,
+        "status": "proposed"
+      },
+      {
+        "id": "CCP-RULE-005",
+        "type": "claim_window_days",
+        "description": "120 days dispute window",
+        "parameters": {
+          "days": 120
+        },
+        "source_page": 5,
+        "source_quote": "Disputes must be raised within one hundred twenty (120) days of shipment dispatch.",
+        "confidence": 0.99,
+        "status": "proposed"
+      }
+    ]
+  },
+  "metrics": {
+    "prompt_tokens": 1400,
+    "completion_tokens": 580,
+    "latency_ms": 610.0,
+    "tokens_per_second": 55.4
+  }
+}

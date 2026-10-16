@@ -1,0 +1,51 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: clawback-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_NAME=Clawback
+      - APP_ENV=production
+      - DEBUG=false
+      - DATABASE_URL=sqlite:////app/data/clawback.db
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost
+      - LLM_MODE=replay
+      - LLM_BASE_URL=https://notebooks.amd.com/tokenfactory/v1
+      - LLM_API_KEY=${LLM_API_KEY:-}
+      - LLM_MODEL=google/gemma-2-9b-it
+      - REPLAY_CACHE_DIR=/app/backend/replay_cache
+      - UPLOAD_DIR=/app/data/uploads
+    volumes:
+      - clawback-data:/app/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: clawback-web
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost/health"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  clawback-data:
+    driver: local

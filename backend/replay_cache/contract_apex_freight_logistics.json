@@ -108,9 +108,9 @@
     ]
   },
   "metrics": {
-    "prompt_tokens": 1420,
-    "completion_tokens": 685,
-    "latency_ms": 642.5,
-    "tokens_per_second": 61.2
+    "prompt_tokens": 1400,
+    "completion_tokens": 580,
+    "latency_ms": 610.0,
+    "tokens_per_second": 55.4
   }
 }
