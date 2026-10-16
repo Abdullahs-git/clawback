@@ -26,10 +26,23 @@ BANNED_PHRASES = [
 # Target files to validate against banned phrases and ungrounded figures
 TARGET_FILES = [
     REPO_ROOT / "README.md",
+    REPO_ROOT / "docs" / "INDEX.md",
+    REPO_ROOT / "docs" / "system-design.md",
     REPO_ROOT / "docs" / "architecture.md",
+    REPO_ROOT / "docs" / "tech-stack.md",
+    REPO_ROOT / "docs" / "frontend-architecture.md",
+    REPO_ROOT / "docs" / "backend-and-rules-engine.md",
+    REPO_ROOT / "docs" / "database-design.md",
+    REPO_ROOT / "docs" / "extraction-and-quote-safeguard.md",
+    REPO_ROOT / "docs" / "dispute-workflow.md",
+    REPO_ROOT / "docs" / "results-and-benchmarks.md",
     REPO_ROOT / "docs" / "amd-setup.md",
     REPO_ROOT / "docs" / "track3-submission.md",
     REPO_ROOT / "docs" / "demo-script.md",
+    REPO_ROOT / "brain" / "README.md",
+    REPO_ROOT / "brain" / "architecture-decisions.md",
+    REPO_ROOT / "brain" / "data-dictionary.md",
+    REPO_ROOT / "brain" / "troubleshooting-guide.md",
 ]
 
 
