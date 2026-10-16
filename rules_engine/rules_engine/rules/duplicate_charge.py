@@ -17,7 +17,7 @@ def audit_duplicates(
     Returns discrepancies for all lines that repeat a (shipment_id, charge_code) combination.
     """
     discrepancies: List[AuditDiscrepancy] = []
-    seen_charges: Set[str] = set()
+    seen_charges: Dict[str, NormalizedInvoiceLine] = {}
 
     # Sort deterministically by date and line_id so the original is always preserved
     # and duplicates are flagged consistently regardless of input batch order.
@@ -26,12 +26,15 @@ def audit_duplicates(
     for line in sorted_lines:
         key = f"{line.shipment_id}::{line.charge_code.upper()}"
         if key in seen_charges:
+            original = seen_charges[key]
             # Duplicate detected!
             expected = Decimal("0.00")
             overcharge = line.amount_billed
+            amounts_match = (line.amount_billed == original.amount_billed)
+            note = "" if amounts_match else f" (Note: billed amounts differ from original ${original.amount_billed:.2f})"
             math_str = (
-                f"Duplicate billing detected: shipment {line.shipment_id} was already billed for code {line.charge_code}. "
-                f"Expected $0.00 vs Billed ${line.amount_billed:.2f}. Overcharge = ${overcharge:.2f}."
+                f"Duplicate billing detected: shipment {line.shipment_id} was already billed for code {line.charge_code} "
+                f"on line {original.line_id}. Expected $0.00 vs Billed ${line.amount_billed:.2f}. Overcharge = ${overcharge:.2f}.{note}"
             )
             discrepancies.append(
                 AuditDiscrepancy(
@@ -52,6 +55,6 @@ def audit_duplicates(
                 )
             )
         else:
-            seen_charges.add(key)
+            seen_charges[key] = line
 
     return discrepancies

@@ -3,7 +3,7 @@
 > [!NOTE]
 > All figures in this report are measured directly by `benchmark/run_benchmark.py` on the synthetic benchmark dataset. All numbers quoted in the README and demo presentation reflect this certified output.
 
-**Execution Timestamp:** 2026-10-16 20:51:30 UTC  
+**Execution Timestamp:** 2026-10-16 22:46:18 UTC  
 **Dataset Specification:** Synthetic Demo Data (3 Carrier Contracts, 25 Invoice Batches, 1,250 Invoice Line Items)  
 **Target Hardware:** AMD ROCm / AMD Developer Cloud / AMD Token Factory  
 **Model Identifier:** `google/gemma-2-9b-it`  
@@ -29,15 +29,15 @@ The audit engine executes pure Python `Decimal` logic with zero LLM calculations
 
 | Metric | Planted Ground Truth | Detected Discrepancies | Accuracy |
 | :--- | :---: | :---: | :---: |
-| **Discrepancy Count** | 284 items | 287 items | **101.1% Recall** / **100.0% Precision** |
-| **Total Overcharge Dollars** | **$9130.51** | **$9159.31** | **$28.80 Variance** (100% Exact) |
+| **Discrepancy Count** | 284 items | 284 items | **100.0% Recall** / **100.0% Precision** |
+| **Total Overcharge Dollars** | **$9130.51** | **$9130.51** | **$0.00 Variance** (100% Exact) |
 
 ---
 
 ## 3. Performance & Economic Telemetry
 
 - **Contract Extraction Latency:** 0.03 seconds per multi-page contract PDF
-- **Invoice Batch Audit Latency:** 2.13 milliseconds for 50 invoice lines (sub-second throughput)
+- **Invoice Batch Audit Latency:** 2.30 milliseconds for 50 invoice lines (sub-second throughput)
 - **Inference Throughput:** ~58.5 tokens/second on AMD infrastructure
 - **Estimated Cost per Contract:** $0.000264 USD
 - **Audit Cost per Invoice Batch:** **$0.000000 USD** *(Because the LLM never touches invoices, audit cost is zero token cost)*

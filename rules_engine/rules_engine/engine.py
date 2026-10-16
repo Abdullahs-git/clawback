@@ -45,8 +45,42 @@ class AuditEngine:
     def audit(self, lines: List[NormalizedInvoiceLine]) -> AuditResult:
         discrepancies: List[AuditDiscrepancy] = []
 
-        # 1. Run single-line rules
+        # 1. Run multi-line rules first (e.g. duplicate charges) so 100% full-line overcharges take precedence
+        dup_rules = [r for r in self.rules if r.type == "duplicate_charge"]
+        duplicate_line_ids = set()
+        for rule in dup_rules:
+            dup_discs = audit_duplicates(lines, rule)
+            for disc in dup_discs:
+                if self.claim_rule and not disc.claim_deadline_date:
+                    dl, rem = calculate_claim_deadline(
+                        disc.invoice_date, self.claim_rule, self.reference_date
+                    )
+                    disc = AuditDiscrepancy(
+                        line_id=disc.line_id,
+                        shipment_id=disc.shipment_id,
+                        invoice_number=disc.invoice_number,
+                        invoice_date=disc.invoice_date,
+                        charge_code=disc.charge_code,
+                        rule_id=disc.rule_id,
+                        rule_type=disc.rule_type,
+                        rule_description=disc.rule_description,
+                        contract_page=disc.contract_page,
+                        contract_clause_quote=disc.contract_clause_quote,
+                        expected_amount=disc.expected_amount,
+                        billed_amount=disc.billed_amount,
+                        overcharge_amount=disc.overcharge_amount,
+                        calculation_math=disc.calculation_math,
+                        claim_deadline_date=dl,
+                        days_remaining_to_claim=rem,
+                    )
+                discrepancies.append(disc)
+                duplicate_line_ids.add(disc.line_id)
+
+        # 2. Run single-line rules on lines not already flagged as duplicates
         for line in lines:
+            if line.line_id in duplicate_line_ids:
+                # Line is already flagged as a 100% duplicate charge (expected $0.00)
+                continue
             line_flagged = False
             for rule in self.rules:
                 disc: Optional[AuditDiscrepancy] = None
@@ -91,35 +125,6 @@ class AuditEngine:
                     line_flagged = True
                     # Stop after first matching rule per line to avoid double-claiming the same line
                     break
-
-        # 2. Run multi-line rules (e.g. duplicate charges)
-        dup_rules = [r for r in self.rules if r.type == "duplicate_charge"]
-        for rule in dup_rules:
-            dup_discs = audit_duplicates(lines, rule)
-            for disc in dup_discs:
-                if self.claim_rule and not disc.claim_deadline_date:
-                    dl, rem = calculate_claim_deadline(
-                        disc.invoice_date, self.claim_rule, self.reference_date
-                    )
-                    disc = AuditDiscrepancy(
-                        line_id=disc.line_id,
-                        shipment_id=disc.shipment_id,
-                        invoice_number=disc.invoice_number,
-                        invoice_date=disc.invoice_date,
-                        charge_code=disc.charge_code,
-                        rule_id=disc.rule_id,
-                        rule_type=disc.rule_type,
-                        rule_description=disc.rule_description,
-                        contract_page=disc.contract_page,
-                        contract_clause_quote=disc.contract_clause_quote,
-                        expected_amount=disc.expected_amount,
-                        billed_amount=disc.billed_amount,
-                        overcharge_amount=disc.overcharge_amount,
-                        calculation_math=disc.calculation_math,
-                        claim_deadline_date=dl,
-                        days_remaining_to_claim=rem,
-                    )
-                discrepancies.append(disc)
 
         # 3. Calculate category totals & aggregate overcharge
         total_overcharge = Decimal("0.00")
