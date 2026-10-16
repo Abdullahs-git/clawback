@@ -51,5 +51,5 @@
    - Extracted rules require explicit human approval before becoming active for audits.
    - Generated dispute letters require approval before formal export.
    - Clawback never automatically contacts a carrier without human sign-off.
-5. **Certified Replay Mode:**
+5. **Recorded Replay Mode:**
    When running offline or during network disruptions, Clawback serves pre-recorded real AMD model responses labeled with the badge: `REPLAY (recorded from AMD endpoint)`.

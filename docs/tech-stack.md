@@ -64,4 +64,4 @@ clawback/
 ### Why Google Gemma 2 (9B-IT) on AMD ROCm?
 - **Reasoning Density**: Gemma 2 9B possesses exceptional legal text comprehension and structured JSON output discipline.
 - **AMD Hardware Acceleration**: Served via vLLM on AMD ROCm Instinct GPUs, providing low latency and high token throughput for multi-page contract processing.
-- **Certified Replay Mode**: For zero-GPU evaluation environments (like CI runners), recorded AMD model outputs provide 100% deterministic reproducibility.
+- **Recorded Replay Mode**: For zero-GPU evaluation environments (like CI runners), recorded AMD model outputs provide 100% deterministic reproducibility.

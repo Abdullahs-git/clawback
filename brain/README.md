@@ -20,6 +20,6 @@ brain/
 
 - **ADR-001: Zero LLM Math**: Why we ban LLMs from calculating financial numbers and enforce strict Python `Decimal`.
 - **ADR-002: Quote Safeguard**: Why verbatim substring verification is enforced over probabilistic fuzzy matching.
-- **ADR-003: Certified Replay Mode**: Why certified replay fixtures are used for deterministic CI and offline reviews.
+- **ADR-003: Recorded Replay Mode**: Why recorded replay fixtures are used for deterministic CI and offline reviews.
 - **ADR-004: Decoupled Rules Engine**: Why the rules engine has zero dependencies on web frameworks or LLM libraries.
 - **ADR-005: AP Clerk Copilot**: Why Clawback acts as a copilot for human sign-off rather than an autonomous carrier dispatch agent.

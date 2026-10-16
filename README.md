@@ -33,7 +33,7 @@ Shippers and manufacturers overpay freight carriers because invoices routinely c
    Extracted rules require user review and approval before becoming active. Dispute letters require review and approval before export. Clawback never automatically contacts a carrier without human approval.
 5. **AMD Inference Telemetry Panel:**  
    The UI includes a dedicated AMD Panel displaying model name (`google/gemma-2-9b-it`), host, latency ms, tokens/sec, and call logs.
-6. **Certified Replay Mode:**  
+6. **Recorded Replay Mode:**  
    Supports `LLM_MODE=live|replay`. Replay mode serves cached outputs recorded from AMD endpoints, and the UI displays a clear `REPLAY (recorded from AMD endpoint)` badge.
 
 ---
@@ -51,8 +51,8 @@ Shippers and manufacturers overpay freight carriers because invoices routinely c
 | **Quote Verification Safeguard Pass Rate** | **100.0%** | 100.0% |
 | **Audit Engine Line Coverage** | **1,250 Lines Audited** | 1,000+ Lines |
 | **Audit Error Detection Precision** | **100.0%** | &gt; 95.0% |
-| **Total Overcharge Recovered** | **$9,159.31 USD** | Exact Cent Accuracy |
-| **Batch Audit Latency** | **2.13 ms** (50 lines) | &lt; 50 ms |
+| **Total Overcharge Recovered** | **$9,130.51 USD** | Exact Cent Accuracy |
+| **Batch Audit Latency** | **2.30 ms** (50 lines) | &lt; 50 ms |
 | **Audit LLM Cost per Invoice** | **$0.000000** | $0 (Deterministic) |
 | **Rules Engine Unit Test Coverage** | **100% Line & Branch** | 100% Required |
 

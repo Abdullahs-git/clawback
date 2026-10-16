@@ -17,12 +17,12 @@ Welcome to the comprehensive documentation directory for **Clawback**, the deter
 ## Intelligence & Verification Pipelines
 - [Contract Extraction & Quote Safeguard](extraction-and-quote-safeguard.md): Gemma 2 9B legal parsing, prompt templates, and the verbatim Quote Verification Safeguard.
 - [Dispute Generation Workflow](dispute-workflow.md): Dispute letter synthesis, Schedule A evidence itemization, and ReportLab PDF export.
-- [AMD ROCm & Developer Cloud Setup](amd-setup.md): Serving Google Gemma 2 on AMD ROCm GPUs via vLLM, telemetry metrics, and certified replay.
+- [AMD ROCm & Developer Cloud Setup](amd-setup.md): Serving Google Gemma 2 on AMD ROCm GPUs via vLLM, telemetry metrics, and recorded replay.
 
 ---
 
 ## Benchmarks & Compliance
-- [Benchmark Results & Performance](results-and-benchmarks.md): Reproducible test methodology, 1,250 audited lines, 100% recall, 100% precision, and $9,159.31 in recovered overcharges.
+- [Benchmark Results & Performance](results-and-benchmarks.md): Reproducible test methodology, 1,250 audited lines, 100% recall, 100% precision, and $9,130.51 in recovered overcharges.
 - [Claims Register & Copy Policy](claims-register.md): Grounded claims register (CLM-001 to CLM-008) and banned phrase enforcement.
 
 ---

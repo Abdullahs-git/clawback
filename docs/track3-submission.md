@@ -25,15 +25,15 @@ Industry audit vendors report that about 3 to 7 percent of freight spend is reco
 ## 2. Product Capabilities
 
 ### A. Contract Rule Extraction with Mandatory Quote Verification
-- Shippers upload standard PDF contracts (e.g., FedEx, UPS, regional LTL carriers).
+- Shippers upload standard PDF contracts (synthetic contracts modeled on common LTL terms; real carrier contracts are untested).
 - **Google Gemma 2 (9B-IT)** running on AMD ROCm extracts contractual terms: base discounts, accessorial caps (liftgate, residential, inside delivery), fuel surcharge index percentages, dimensional weight divisors, minimum charge floors, duplicate billing prohibitions, and claim windows.
-- **Quote Verification Safeguard**: Every rule proposed by the LLM must contain a verbatim quote from the contract text. If a quote does not match the text layer, the rule is **automatically rejected** as unsupported. Zero hallucinations reach the audit stage.
+- **Quote Verification Safeguard**: Every rule proposed by the LLM must contain a verbatim quote from the contract text. If a quote does not match the text layer, the rule is **automatically rejected** as unsupported. Quotes are verified, parameters are checked against them, and a human approves every rule before audit execution.
 
 ### B. Deterministic Audit Engine (Zero LLM Math)
-- Invoices are ingested via CSV or EDI-compatible tables.
+- Invoices are ingested via CSV upload (EDI is roadmap).
 - Calculations are executed by a pure-Python, zero-network engine utilizing strict `Decimal` arithmetic.
 - The LLM **never** performs mathematical operations or computes money.
-- Audit rules run with an average batch audit latency of **2.13 ms**.
+- Audit rules run with an average batch audit latency of **2.30 ms**.
 
 ### C. 100% Traceable Mathematical Proofs
 - Every audit finding provides a drill-down proof connecting:
@@ -56,12 +56,12 @@ All performance statistics are measured and reproduced via automated test gates:
 |:---|:---|:---|
 | **Audited Invoice Lines** | **1,250 lines** (25 batches) | Comprehensive multi-carrier workload |
 | **Carrier Profiles** | **3 contracts** (Apex, Beacon, Crestline) | Multi-page commercial agreements |
-| **Audit Recall** | **100.0%** | All 287 planted billing errors caught |
+| **Audit Recall** | **100.0%** | All 284 planted billing errors caught |
 | **Audit Precision** | **100.0%** | Zero false accusations |
 | **Planted Overcharge Dollars** | **$9,130.51** | Ground truth planted baseline |
-| **Recovered Overcharge Dollars** | **$9,159.31** | Full recovery with duplicate detection |
-| **Quote Verification Success** | **100.0%** | Zero hallucinations accepted |
-| **Engine Execution Speed** | **2.13 ms / batch** | Instantaneous batch processing |
+| **Recovered Overcharge Dollars** | **$9,130.51** | 100% exact ground truth recovery |
+| **Quote Verification Success** | **100.0%** | Unsupported rules rejected |
+| **Engine Execution Speed** | **2.30 ms / batch** | Instantaneous batch processing |
 
 ---
 
@@ -79,17 +79,17 @@ FastAPI REST API (Single Session AP Copilot)
    v                                 v
 OpenAI-Compatible vLLM Endpoint   SQLite Database (Portable)
 (Google Gemma 2 on AMD ROCm)
-[Certified Replay Mode: LLM_MODE=replay]
+[Recorded Replay Mode: LLM_MODE=replay]
 ```
 
 Clawback is engineered for private deployment on AMD infrastructure:
 - **vLLM Inference Acceleration**: Gemma 2 9B-IT served on AMD GPUs through ROCm, providing high-throughput inference for dense legal text parsing.
-- **Certified Replay Mode**: For reliable, deterministic offline reviews and demonstrations, `LLM_MODE=replay` serves recorded AMD outputs with clear UI badging.
+- **Recorded Replay Mode**: For reliable, deterministic offline reviews and demonstrations, `LLM_MODE=replay` serves recorded AMD outputs with clear UI badging.
 
 ---
 
 ## 5. Roadmap
 
 1. **Carrier Portal & EDI Integrations**: Direct API and EDI 210/310 integration for automated submission into carrier billing dispute portals.
-2. **Dynamic Published Tariff Tables**: Expansion of base linehaul discount rules against published Czarlite and carrier baseline rate tables.
+2. **Dynamic Published Tariff Tables**: Expansion of base linehaul discount rules against published carrier baseline rate tables.
 3. **Multi-Carrier Claim Expiration Alerts**: Proactive timeline notifications alerting clerks before 15-day or contractual claim windows elapse.

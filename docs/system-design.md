@@ -90,7 +90,7 @@ The Clawback architecture enforces five non-negotiable invariants:
 
 ### Stage 4: Invoice Ingestion & Normalization
 - CSV invoice files are ingested and parsed into `NormalizedInvoiceLine` domain objects.
-- All monetary columns (`amount_billed`, `published_rate`) and percentages (`discount_applied_percent`, `fuel_surcharge_percent`) are converted to `Decimal` using banker's rounding (`ROUND_HALF_UP`).
+- All monetary columns (`amount_billed`, `published_rate`) and percentages (`discount_applied_percent`, `fuel_surcharge_percent`) are converted to `Decimal` using `ROUND_HALF_UP` (not banker's rounding).
 
 ### Stage 5: Deterministic Audit Execution
 - Pure-Python `AuditEngine` executes active rules against normalized invoice lines:

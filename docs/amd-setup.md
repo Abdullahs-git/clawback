@@ -6,11 +6,11 @@ This guide documents the setup for serving Google Gemma open models on AMD ROCm 
 - **Model Name:** `google/gemma-2-9b-it` (Gemma 2 9B Instruction Tuned)
 - **Serving Engine:** vLLM (OpenAI-compatible `/v1/chat/completions` server) with ROCm 6.2+
 - **Inference Mode:** Open weights hosted on AMD GPU infrastructure
-- **Fallback / Resilience:** Certified `replay` mode (`LLM_MODE=replay`) serving real AMD inference logs
+- **Fallback / Resilience:** Recorded `replay` mode (`LLM_MODE=replay`) serving real recorded AMD inference logs
 
 ---
 
-## 2. Serving via Docker on AMD ROCm (Verified Commands)
+## 2. Serving via Docker on AMD ROCm (Reference - Not Verified Locally)
 
 AMD provides official ROCm-optimized vLLM containers via Docker Hub (`rocm/vllm`).
 

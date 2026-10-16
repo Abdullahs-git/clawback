@@ -18,15 +18,15 @@ This document records the foundational engineering trade-offs, alternative appro
 - **Status**: Accepted & Enforced
 - **Context**: When extracting contract rules, an LLM might summarize or paraphrase terms (e.g. inventing *"Residential surcharge is $0"* when the contract states *"Residential delivery fee shall be waived in full"*). If an auditor cites a paraphrased quote in a formal dispute, the carrier will reject the claim as ungrounded.
 - **Decision**: Enforce a strict **Quote Verification Safeguard**: every rule proposed by Gemma must supply a verbatim `source_quote`. The system verifies that the normalized string exists directly within the contract text layer. Any rule whose quote cannot be verified is automatically marked `status = "rejected"`.
-- **Consequences**: Zero hallucinated rules reach the audit execution stage. Audited claims are 100% legally grounded.
+- **Consequences**: Unsupported rules are rejected, parameters are validated against the quote, and a human approves every rule before audit execution.
 
 ---
 
-## ADR-003: Certified Replay Mode (`LLM_MODE=replay`)
+## ADR-003: Recorded Replay Mode (`LLM_MODE=replay`)
 
 - **Status**: Accepted & Enforced
 - **Context**: Live GPU inference endpoints can experience network latency, rate limits, or intermittent downtime during offline hackathon reviews, automated CI runs, or pitch presentations.
-- **Decision**: Implement a certified replay cache (`LLM_MODE=replay`) that serves pre-recorded real AMD model outputs for verified contracts.
+- **Decision**: Implement a recorded replay cache (`LLM_MODE=replay`) that serves pre-recorded real AMD model outputs for verified contracts.
 - **Consequences**: The system is 100% testable and runnable on clean machines without requiring an active GPU or live API token. The UI prominently renders an amber `REPLAY (recorded from AMD endpoint)` badge to maintain complete transparency.
 
 ---

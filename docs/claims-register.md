@@ -11,12 +11,12 @@ Every claim made publicly must be recorded here with its status, source, and app
 | ID | Topic / Metric | Source & Status | Allowed Wording / Policy |
 |:---|:---|:---|:---|
 | **CLM-001** | Freight audit overcharge recovery (3%–7%) | Vendor-sourced (industry surveys; non-academic) | *"Audit vendors report about 3 to 7 percent of freight spend recovered in overbilling."* |
-| **CLM-002** | Freight invoice error rate (up to 10%) | Vendor-sourced, unverified independently | *"Industry publications report that up to 10 percent of freight bills contain billing discrepancies."* |
-| **CLM-003** | Typical parcel claim windows (15 days) | Standard carrier terms (FedEx/UPS Ground service guides) | *"Dispute windows are typically about 15 days for parcel carriers; shippers must verify exact contract terms."* |
+| **CLM-002** | Freight invoice error rate (up to 10%) | Vendor-sourced, not independently verified | *"Industry publications report that up to 10 percent of freight bills contain billing discrepancies."* |
+| **CLM-003** | Typical parcel claim windows (15 days) | Vendor-sourced, not independently verified | *"Dispute windows are commonly about 15 days for parcel carriers; shippers must verify exact contract terms."* |
 | **CLM-004** | Contingency audit firm cuts (20%–50%) | Industry pricing reports (indicative hypothesis) | *"Third-party contingency audit firms commonly take 20 to 50 percent of recovered funds."* |
-| **CLM-005** | Carrier dispute mechanisms (Portals/EDI) | Industry operational practice | *Roadmap note only: Clawback exports verified dispute letters as an MVP copilot; EDI 210/310 integration is planned.* |
+| **CLM-005** | Carrier dispute mechanisms (Portals/EDI) | Vendor-sourced, not independently verified | *Roadmap note only: Clawback exports verified dispute letters as an MVP copilot; EDI 210/310 integration is planned.* |
 | **CLM-006** | Clerical time savings | Not empirically measured | **DO NOT CLAIM.** Do not state arbitrary productivity percentages (e.g., "saves 80% time"). |
-| **CLM-007** | Real-life recovery guarantees | Not measured in production | **DO NOT CLAIM.** All benchmark results and demonstrations use synthetic demo data. |
+| **CLM-007** | Real-life recovery guarantees | Not measured in production | **DO NOT CLAIM.** All benchmark results and demonstrations use synthetic demo data. Real carrier contracts are untested. |
 | **CLM-008** | Fulfillment costs as % of GMV | No verified source | **DO NOT USE.** Prohibited from pitch materials. |
 
 ---
@@ -29,11 +29,11 @@ All benchmark metrics referenced in documentation or presentations are derived f
 |:---|:---|:---|
 | Total Audited Invoice Lines | **1,250** lines | 25 synthetic invoice batches |
 | Total Contracted Carrier Profiles | **3** carriers | Apex Freight, Beacon Express, Crestline Cargo |
-| Total Ground-Truth Planted Errors | **$9,159.31** | 287 planted billing errors |
-| Total Clawback Detected Overcharges | **$9,159.31** | 100.0% dollar recovery precision |
+| Total Ground-Truth Planted Errors | **$9,130.51** | 284 planted billing errors |
+| Total Clawback Detected Overcharges | **$9,130.51** | 100.0% dollar recovery precision ($0.00 variance) |
 | False Positive Rate | **0.00%** | 0 ungrounded findings |
-| Quote Verification Safeguard Auto-Rejection | **100.0%** | Zero hallucinations allowed |
-| Average Rules Engine Execution Latency | **2.13 ms** | Pure-Python deterministic engine |
+| Quote Verification Safeguard Auto-Rejection | **100.0%** | Unsupported quotes automatically rejected |
+| Average Rules Engine Execution Latency | **2.30 ms** | Pure-Python deterministic engine |
 
 ---
 
@@ -45,3 +45,8 @@ The automated validator `scripts/check_claims.py` checks all markdown and submis
 2. `"every penny"`: Hyperbolic marketing claim. Must use specific audit findings.
 3. `"100% accurate"` / `"100% accuracy"`: Overclaim for probabilistic LLMs. LLMs propose rules; deterministic Python engines calculate money.
 4. `"guaranteed"`: Unwarranted legal guarantee.
+5. `"zero hallucination"` / `"zero hallucinations"`: Overclaim; use quote verification & human approval.
+6. `"100% legally"` / `"legally enforceable"`: Overclaim; use approval-stamped draft.
+7. `"signed PDF"`: Overclaim; use approval-stamped PDF drafted for clerk review.
+8. `"EDI-compatible"`: Overclaim; CSV is implemented, EDI is on roadmap.
+9. `"certified replay"`: Overclaim; replay is recorded, not certified.

@@ -1,6 +1,6 @@
 # Clawback Dispute Generation Workflow
 
-Clawback positions dispute generation as a **copilot for the accounts payable or logistics clerk**, turning raw numerical overcharges into legally enforceable, itemized carrier claim packages.
+Clawback positions dispute generation as a **copilot for the accounts payable or logistics clerk**, turning raw numerical overcharges into approval-stamped, itemized carrier claim packages.
 
 ---
 
@@ -24,8 +24,8 @@ Clawback positions dispute generation as a **copilot for the accounts payable or
                                           +-------------------+-------------------+
                                           |                                       |
                                           v                                       v
-                             [Export Formatted Markdown]               [Export Signed PDF]
-                                (For Carrier Emails)                   (Formal Legal Filing)
+                             [Export Formatted Markdown]               [Export Approval-Stamped PDF]
+                                (For Carrier Emails)                   (Drafted for Clerk Review)
 ```
 
 ---

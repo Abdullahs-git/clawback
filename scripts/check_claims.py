@@ -15,12 +15,18 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
-# Phrases banned by Clawback Plan v2 Section 4.9 & 11
+# Phrases banned by Clawback Plan v2 Section 4.9 & Fix Plan Section 8
 BANNED_PHRASES = [
     r"\bon-prem(?:ises)?\b",
     r"\bevery penny\b",
     r"\b100%\s+accurate\b",
     r"\bguaranteed\b",
+    r"\bzero\s+hallucinations?\b",
+    r"\b100%\s+legally\b",
+    r"\blegally\s+enforceable\b",
+    r"\bsigned\s+pdf\b",
+    r"\bedi-compatible\b",
+    r"\bcertified\s+replay\b",
 ]
 
 # Target files to validate against banned phrases and ungrounded figures

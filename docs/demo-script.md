@@ -24,14 +24,14 @@
 
 > "We begin by uploading our carrier agreement with Apex Freight.
 >
-> In seconds, Gemma 2 on our AMD ROCm inference endpoint extracts the contractual rules:
+> Gemma 2 on our AMD ROCm inference endpoint extracts the contractual rules:
 > - Waived residential surcharges
 > - A $40.00 liftgate cap
 > - An 11.5% fixed fuel surcharge
 > - A 166 dimensional weight divisor
 > - Duplicate charge prohibitions
 >
-> Crucially, Clawback enforces a **Quote Verification Safeguard**: every rule must contain a verbatim quote directly from the contract text. Notice this simulated ungrounded rule: because its quote does not match the contract text layer, Clawback automatically rejected it. Zero LLM hallucinations ever reach our audit pipeline.
+> Crucially, Clawback enforces a **Quote Verification Safeguard**: every rule must contain a verbatim quote directly from the contract text, and parameters are validated against that quote. Notice this simulated ungrounded rule: because its quote does not match the contract text layer, Clawback automatically rejected it. Quotes are verified, parameters are checked against them, and a human approves every rule before audit execution.
 >
 > We approve the verified rules."
 
@@ -39,13 +39,13 @@
 
 ## Act 3: Deterministic Invoice Audit & Math Traceability (1:15 - 2:00)
 
-*Visual: Navigate to Invoices View -> Ingest 25 invoice batches (1,250 lines) -> Click 'Run Deterministic Audit' -> Dashboard updates to $9,159.31.*
+*Visual: Navigate to Invoices View -> Ingest 25 invoice batches (1,250 lines) -> Click 'Run Deterministic Audit' -> Dashboard updates to $9,130.51.*
 
 > "Next, we ingest 25 invoice batches totaling 1,250 line items.
 >
-> We trigger the audit. The pure-Python rules engine runs across all 1,250 lines in just **2.13 milliseconds**. 
+> We trigger the audit. The pure-Python rules engine runs across all 1,250 lines in just **2.30 milliseconds**. 
 >
-> The result: **$9,159.31** in recoverable overcharges identified. 
+> The result: **$9,130.51** in recoverable overcharges identified. 
 >
 > Because an LLM never touches financial calculations, every finding has mathematical proof. Let's inspect this liftgate charge:
 > - Invoice line billed: $65.00
@@ -63,7 +63,7 @@
 >
 > The letter itemizes every shipment tracking number, BOL, contract citation, and dollar delta in Schedule A. 
 >
-> The AP clerk reviews the letter, approves it, and exports a signed PDF ready for transmission."
+> The AP clerk reviews the letter, approves it, and exports an approval-stamped PDF drafted for clerk review."
 
 ---
 
@@ -71,8 +71,8 @@
 
 *Visual: Open the AMD Status Panel in top navigation bar -> View benchmark/results.json.*
 
-> "Looking at our AMD Telemetry Panel, we monitor real-time inference metrics: Google Gemma 2 9B running on AMD Developer Cloud, with certified replay mode available for offline auditing.
+> "Looking at our AMD Telemetry Panel, we monitor real-time inference metrics: Google Gemma 2 9B running on AMD Developer Cloud, with recorded replay mode available for offline auditing.
 >
-> Our automated benchmark verifies 100% recall on 287 planted billing errors with 0% dollar variance.
+> Our automated benchmark verifies 100% recall on 284 planted billing errors with 0% dollar variance.
 >
 > Clawback: turning carrier contract ambiguity into verified, deterministic margin recovery on AMD. Thank you."
