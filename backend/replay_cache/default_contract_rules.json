@@ -1,0 +1,116 @@
+{
+  "data": {
+    "carrier_name": "Apex Freight Logistics",
+    "contract_reference": "AFL-2026-MSA-088",
+    "effective_date": "2026-01-01",
+    "expiration_date": "2026-12-31",
+    "rules": [
+      {
+        "id": "AFL-RULE-001",
+        "type": "base_discount",
+        "description": "45% discount off standard published baseline freight rates",
+        "parameters": {
+          "percentage": 0.45,
+          "service_level": "Standard LTL"
+        },
+        "source_page": 2,
+        "source_quote": "Shipper shall receive an agreed base discount of forty-five percent (45.0%) off all published standard linehaul rates.",
+        "confidence": 0.98,
+        "status": "proposed"
+      },
+      {
+        "id": "AFL-RULE-002",
+        "type": "accessorial_rule",
+        "description": "Residential delivery surcharge waived entirely",
+        "parameters": {
+          "fee_type": "residential",
+          "allowed": false
+        },
+        "source_page": 3,
+        "source_quote": "Residential delivery surcharges shall be waived in full and shall not be assessed on any shipment.",
+        "confidence": 0.99,
+        "status": "proposed"
+      },
+      {
+        "id": "AFL-RULE-003",
+        "type": "accessorial_rule",
+        "description": "Liftgate service fee capped at $40.00",
+        "parameters": {
+          "fee_type": "liftgate",
+          "allowed": true,
+          "cap": "40.00"
+        },
+        "source_page": 3,
+        "source_quote": "Where requested, liftgate service charges shall not exceed forty dollars ($40.00) per occurrence.",
+        "confidence": 0.97,
+        "status": "proposed"
+      },
+      {
+        "id": "AFL-RULE-004",
+        "type": "fuel_surcharge",
+        "description": "Fuel surcharge fixed at 11.5% for contract term",
+        "parameters": {
+          "fixed_percentage": 0.115
+        },
+        "source_page": 4,
+        "source_quote": "The applicable fuel surcharge index is agreed and fixed at eleven and one-half percent (11.5%) of net linehaul freight.",
+        "confidence": 0.96,
+        "status": "proposed"
+      },
+      {
+        "id": "AFL-RULE-005",
+        "type": "dim_weight_divisor",
+        "description": "Dimensional weight divisor established at 166 cubic inches per pound",
+        "parameters": {
+          "divisor": 166
+        },
+        "source_page": 4,
+        "source_quote": "Cubic dimensional weight calculations shall strictly utilize a divisor of one hundred sixty-six (166).",
+        "confidence": 0.98,
+        "status": "proposed"
+      },
+      {
+        "id": "AFL-RULE-006",
+        "type": "minimum_charge",
+        "description": "Absolute minimum linehaul charge floor of $45.00",
+        "parameters": {
+          "amount": "45.00"
+        },
+        "source_page": 5,
+        "source_quote": "The minimum charge floor per shipment after discount application shall be forty-five dollars ($45.00).",
+        "confidence": 0.95,
+        "status": "proposed"
+      },
+      {
+        "id": "AFL-RULE-007",
+        "type": "duplicate_charge",
+        "description": "Prohibition of redundant or duplicate line item billing",
+        "parameters": {
+          "enabled": true
+        },
+        "source_page": 5,
+        "source_quote": "Carrier warrants that no individual shipment BOL or tracking number shall be invoiced more than once.",
+        "confidence": 0.99,
+        "status": "proposed"
+      },
+      {
+        "id": "AFL-RULE-008",
+        "type": "claim_window_days",
+        "description": "180 calendar days dispute submission window from invoice date",
+        "parameters": {
+          "days": 180
+        },
+        "source_page": 6,
+        "source_quote": "Disputes and overcharge claims must be formally submitted in writing within one hundred eighty (180) days of invoice date.",
+        "confidence": 0.99,
+        "status": "proposed"
+      }
+    ]
+  },
+  "metrics": {
+    "prompt_tokens": 1420,
+    "completion_tokens": 685,
+    "latency_ms": 642.5,
+    "tokens_per_second": 61.2
+  }
+}

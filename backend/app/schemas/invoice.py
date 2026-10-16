@@ -3,7 +3,7 @@ Pydantic v2 schemas for invoices.
 """
 from datetime import datetime
 from typing import List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict
 
 
 class InvoiceLineItemBase(BaseModel):
@@ -31,9 +31,7 @@ class InvoiceLineItemBase(BaseModel):
 class InvoiceLineItemResponse(InvoiceLineItemBase):
     id: str
     batch_id: str
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class InvoiceBatchSummary(BaseModel):
@@ -43,9 +41,7 @@ class InvoiceBatchSummary(BaseModel):
     uploaded_at: datetime
     total_lines: int
     total_billed_amount: str
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class InvoiceLinesPagination(BaseModel):

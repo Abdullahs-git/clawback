@@ -3,7 +3,7 @@ Pydantic v2 schemas for contracts and rules.
 """
 from datetime import datetime
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class ContractRuleBase(BaseModel):
@@ -32,9 +32,7 @@ class ContractRuleUpdate(BaseModel):
 class ContractRuleResponse(ContractRuleBase):
     contract_id: str
     created_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ContractBatchRulesUpdate(BaseModel):
@@ -49,9 +47,7 @@ class ContractSummaryResponse(BaseModel):
     uploaded_at: datetime
     rule_count: int = 0
     approved_rule_count: int = 0
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ContractDetailResponse(BaseModel):
@@ -63,6 +59,4 @@ class ContractDetailResponse(BaseModel):
     expiration_date: Optional[str] = None
     uploaded_at: datetime
     rules: List[ContractRuleResponse] = []
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

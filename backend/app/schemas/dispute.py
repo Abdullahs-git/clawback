@@ -3,7 +3,7 @@ Pydantic v2 schemas for dispute letters.
 """
 from datetime import datetime
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class DisputeGenerateRequest(BaseModel):
@@ -39,6 +39,4 @@ class DisputeLetterResponse(BaseModel):
     approved_by: Optional[str] = None
     approved_at: Optional[datetime] = None
     created_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
