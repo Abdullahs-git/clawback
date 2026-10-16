@@ -1,0 +1,35 @@
+{
+  "metadata": {
+    "timestamp": "2026-10-16T20:51:30.678672+00:00",
+    "product": "Clawback",
+    "dataset_label": "synthetic demo data",
+    "hardware_platform": "AMD ROCm / AMD Developer Cloud",
+    "model_architecture": "google/gemma-2-9b-it"
+  },
+  "rule_extraction": {
+    "total_contracts": 3,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1_score": 1.0,
+    "quote_verification_share": 1.0
+  },
+  "audit_engine": {
+    "total_lines_audited": 1250,
+    "planted_errors_count": 284,
+    "detected_discrepancies_count": 287,
+    "recall": 1.0106,
+    "precision": 1.0,
+    "planted_dollars": "9130.51",
+    "detected_dollars": "9159.31",
+    "dollar_difference": "28.80"
+  },
+  "performance": {
+    "avg_contract_extraction_sec": 0.03,
+    "avg_invoice_batch_audit_ms": 2.13,
+    "total_benchmark_run_sec": 0.54,
+    "avg_tokens_per_call": 2030,
+    "simulated_tps": 58.5,
+    "estimated_llm_cost_per_contract_usd": 0.000264,
+    "estimated_audit_cost_per_invoice_batch_usd": 0.0
+  }
+}
