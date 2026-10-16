@@ -1,6 +1,10 @@
 {
   "metadata": {
-    "timestamp": "2026-10-16T22:46:18.329025+00:00",
+    "timestamp": "2026-10-16T22:52:52.009631+00:00",
+    "git_commit": "4bdee0e67d48019f84dfcdf81490c394eb6a0b92",
+    "seed": 42,
+    "mode": "replay",
+    "endpoint_host": "notebooks.amd.com",
     "product": "Clawback",
     "dataset_label": "synthetic demo data",
     "hardware_platform": "AMD ROCm / AMD Developer Cloud",
@@ -24,9 +28,9 @@
     "dollar_difference": "0.00"
   },
   "performance": {
-    "avg_contract_extraction_sec": 0.034,
-    "avg_invoice_batch_audit_ms": 2.3,
-    "total_benchmark_run_sec": 0.34,
+    "avg_contract_extraction_sec": 0.024,
+    "avg_invoice_batch_audit_ms": 2.16,
+    "total_benchmark_run_sec": 0.29,
     "avg_tokens_per_call": 2030,
     "simulated_tps": 58.5,
     "estimated_llm_cost_per_contract_usd": 0.000264,

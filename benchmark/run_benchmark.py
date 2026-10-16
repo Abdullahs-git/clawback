@@ -235,9 +235,20 @@ async def run_full_benchmark():
     print(f"  LLM Cost per Invoice Batch:   $0.000000 (Deterministic engine has 0 token cost)")
 
     # 4. Save results.json
+    import subprocess
+    git_commit = "unknown"
+    try:
+        git_commit = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode().strip()
+    except Exception:
+        pass
+
     results_payload = {
         "metadata": {
             "timestamp": datetime.now(timezone.utc).isoformat(),
+            "git_commit": git_commit,
+            "seed": 42,
+            "mode": "replay",
+            "endpoint_host": "notebooks.amd.com",
             "product": "Clawback",
             "dataset_label": "synthetic demo data",
             "hardware_platform": "AMD ROCm / AMD Developer Cloud",

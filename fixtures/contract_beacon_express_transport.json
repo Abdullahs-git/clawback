@@ -1,0 +1,79 @@
+{
+  "data": {
+    "carrier_name": "Beacon Express Transport",
+    "contract_reference": "BET-2026-MSA-104",
+    "effective_date": "2026-01-01",
+    "expiration_date": "2026-12-31",
+    "rules": [
+      {
+        "id": "BET-RULE-001",
+        "type": "base_discount",
+        "description": "50% discount on Express Ground services",
+        "parameters": {
+          "percentage": 0.5,
+          "service_level": "Ground"
+        },
+        "source_page": 2,
+        "source_quote": "Shipper is granted a fifty percent (50.0%) discount from Carrier standard ground rate baseline.",
+        "confidence": 0.98,
+        "status": "proposed"
+      },
+      {
+        "id": "BET-RULE-002",
+        "type": "accessorial_rule",
+        "description": "Address correction fee fixed at $10.00 per package",
+        "parameters": {
+          "fee_type": "address_correction",
+          "allowed": true,
+          "rate": "10.00"
+        },
+        "source_page": 3,
+        "source_quote": "Address correction charges shall be billed at a flat rate of ten dollars ($10.00) per corrected package.",
+        "confidence": 0.97,
+        "status": "proposed"
+      },
+      {
+        "id": "BET-RULE-003",
+        "type": "fuel_surcharge",
+        "description": "Fuel surcharge fixed at 13.0%",
+        "parameters": {
+          "fixed_percentage": 0.13
+        },
+        "source_page": 4,
+        "source_quote": "Fuel surcharge will be pegged at thirteen percent (13.0%) throughout the contract period.",
+        "confidence": 0.95,
+        "status": "proposed"
+      },
+      {
+        "id": "BET-RULE-004",
+        "type": "duplicate_charge",
+        "description": "Prohibition of redundant billing",
+        "parameters": {
+          "enabled": true
+        },
+        "source_page": 5,
+        "source_quote": "Carrier agrees that no consignment shall be subject to duplicate invoicing.",
+        "confidence": 0.98,
+        "status": "proposed"
+      },
+      {
+        "id": "BET-RULE-005",
+        "type": "claim_window_days",
+        "description": "90 calendar days claim submission window",
+        "parameters": {
+          "days": 90
+        },
+        "source_page": 5,
+        "source_quote": "All billing adjustments and claims must be submitted within ninety (90) days from the invoice date.",
+        "confidence": 0.99,
+        "status": "proposed"
+      }
+    ]
+  },
+  "metrics": {
+    "prompt_tokens": 1400,
+    "completion_tokens": 580,
+    "latency_ms": 610.0,
+    "tokens_per_second": 55.4
+  }
+}

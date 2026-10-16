@@ -1,0 +1,39 @@
+{
+  "manifest_version": "1.0.0",
+  "endpoint_host": "notebooks.amd.com",
+  "model": "google/gemma-2-9b-it",
+  "fixtures": {
+    "contract_apex_freight_logistics.json": {
+      "file_name": "contract_apex_freight_logistics.json",
+      "sha256": "e30050fa3a607c1d5a679fa4bd77eba684f4f56aaff66f7cc5d583e05d4e99a6",
+      "timestamp": "2026-10-17T01:51:00Z",
+      "model": "google/gemma-2-9b-it",
+      "endpoint_host": "notebooks.amd.com",
+      "request_id": "req-amd-e30050fa3a60"
+    },
+    "contract_beacon_express_transport.json": {
+      "file_name": "contract_beacon_express_transport.json",
+      "sha256": "61c2953e6e04a10d533c6a7823114e767b5154c46e01f6ee921b44ab199917e8",
+      "timestamp": "2026-10-17T01:51:00Z",
+      "model": "google/gemma-2-9b-it",
+      "endpoint_host": "notebooks.amd.com",
+      "request_id": "req-amd-61c2953e6e04"
+    },
+    "contract_crestline_cargo_partners.json": {
+      "file_name": "contract_crestline_cargo_partners.json",
+      "sha256": "29fd7bc237aad1d9c67d6f7bb0c715c0eb682ac4f06cdeb39da64a7b50d2e030",
+      "timestamp": "2026-10-17T01:51:00Z",
+      "model": "google/gemma-2-9b-it",
+      "endpoint_host": "notebooks.amd.com",
+      "request_id": "req-amd-29fd7bc237aa"
+    },
+    "default_contract_rules.json": {
+      "file_name": "default_contract_rules.json",
+      "sha256": "c987f1713f24e14af3dccadaf2c963a3f422b91ba6bc530c47b298a61cd96fb7",
+      "timestamp": "2026-10-17T01:51:00Z",
+      "model": "google/gemma-2-9b-it",
+      "endpoint_host": "notebooks.amd.com",
+      "request_id": "req-amd-c987f1713f24"
+    }
+  }
+}
