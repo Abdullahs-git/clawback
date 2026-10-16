@@ -191,3 +191,35 @@ INV-1003,2026-09-03,TRK-5003,FRT,100.00,55.00,
     assert pdf_export.status_code == 200
     assert pdf_export.headers["content-type"] == "application/pdf"
     assert len(pdf_export.content) > 1000
+
+
+def test_scanned_pdf_rejection(client):
+    """Uploading a PDF with no extractable text layer triggers the scanned image error."""
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf)
+    # Blank page without text
+    c.showPage()
+    c.save()
+    buf.seek(0)
+    scanned_bytes = buf.getvalue()
+
+    files = {"file": ("scanned_invoice.pdf", scanned_bytes, "application/pdf")}
+    data = {"carrier_name": "Scanned Carrier"}
+
+    resp = client.post("/api/contracts/upload", files=files, data=data)
+    assert resp.status_code == 400
+    assert "Scanned image detected. Upload a text PDF or CSV." in resp.json()["detail"]
+
+
+def test_invalid_file_extension(client):
+    """Non-PDF upload should return 400."""
+    files = {"file": ("test.docx", b"dummy content", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")}
+    resp = client.post("/api/contracts/upload", files=files)
+    assert resp.status_code == 400
+    assert "Only PDF contracts are supported" in resp.json()["detail"]
+
+
+def test_contract_not_found(client):
+    resp = client.get("/api/contracts/non-existent-id")
+    assert resp.status_code == 404
+

@@ -19,7 +19,11 @@ def audit_duplicates(
     discrepancies: List[AuditDiscrepancy] = []
     seen_charges: Set[str] = set()
 
-    for line in lines:
+    # Sort deterministically by date and line_id so the original is always preserved
+    # and duplicates are flagged consistently regardless of input batch order.
+    sorted_lines = sorted(lines, key=lambda l: (l.invoice_date or "", l.line_id or ""))
+
+    for line in sorted_lines:
         key = f"{line.shipment_id}::{line.charge_code.upper()}"
         if key in seen_charges:
             # Duplicate detected!

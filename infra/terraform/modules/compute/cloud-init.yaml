@@ -1,0 +1,43 @@
+#cloud-config
+# Cloud-init configuration for Clawback single VM deployment
+package_update: true
+package_upgrade: true
+
+packages:
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - gnupg
+  - lsb-release
+  - git
+
+write_files:
+  - path: /opt/clawback/.env
+    permissions: '0600'
+    owner: ubuntu:ubuntu
+    content: |
+      LLM_MODE=replay
+      LLM_BASE_URL=${llm_base_url}
+      LLM_API_KEY=${llm_api_key}
+      LLM_MODEL=google/gemma-2-9b-it
+      DATABASE_URL=sqlite:///./data/clawback.db
+      PORT=8000
+      VITE_API_URL=http://localhost:8000
+
+runcmd:
+  # Install Docker CE & Docker Compose
+  - install -m 0755 -d /etc/apt/keyrings
+  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+  - chmod a+r /etc/apt/keyrings/docker.gpg
+  - echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+  - apt-get update -y
+  - apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+  - usermod -aG docker ubuntu
+
+  # Clone Clawback repository
+  - git clone https://github.com/Abdullahs-git/clawback.git /opt/clawback/repo
+  - cp /opt/clawback/.env /opt/clawback/repo/.env
+  - chown -R ubuntu:ubuntu /opt/clawback
+
+  # Start multi-stage compose stack
+  - cd /opt/clawback/repo && docker compose up -d --build

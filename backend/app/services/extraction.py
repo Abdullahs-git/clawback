@@ -9,6 +9,7 @@ import logging
 from typing import Any, Dict, List, Tuple
 from pypdf import PdfReader
 from sqlalchemy.orm import Session
+from fastapi import HTTPException
 
 from backend.app.services.llm_client import amd_llm_client
 from backend.app.services.quote_verifier import apply_quote_verification_safeguard
@@ -85,6 +86,12 @@ async def extract_contract_rules(
     3. Apply quote verification safeguard
     """
     pages_text_map, full_text = extract_text_from_pdf(pdf_bytes)
+    # If no text was extracted from any page, reject as scanned image PDF
+    if not "".join(pages_text_map.values()).strip():
+        raise HTTPException(
+            status_code=400,
+            detail="Scanned image detected. Upload a text PDF or CSV."
+        )
 
     # Prepare extraction prompt with contract text
     prompt = f"Carrier Hint: {carrier_hint}\nFilename: {filename}\n\nDocument Text:\n{full_text[:12000]}"

@@ -149,16 +149,39 @@ Open `http://localhost:5173` in your browser.
 ## 6. Running Tests & Benchmarks
 
 ```bash
+# Automated end-to-end verification of all quality gates & benchmarks
+python scripts/verify_readme.py
+
 # Run rules engine unit tests with 100% money coverage check
-$env:PYTHONPATH=".;rules_engine"
-pytest rules_engine/tests --cov=rules_engine/rules_engine --cov-report=term-missing
+pytest rules_engine/tests --cov=rules_engine --cov-branch --cov-fail-under=100
 
 # Run backend API integration tests
 pytest backend/tests -v
 
+# Run the deterministic audit gate (zero GPU required)
+python benchmark/run_audit_gate.py
+
+# Run the extraction replay gate
+python benchmark/run_extraction_replay_gate.py
+
+# Verify copy and claims integrity (zero banned phrases)
+python scripts/check_claims.py
+
 # Run the full automated benchmark suite
 python benchmark/run_benchmark.py
 ```
+
+---
+
+## 6. Documentation & Submission Materials
+
+- [Track 3 Submission & Margin Framing](docs/track3-submission.md)
+- [3-Minute Video Walkthrough Script](docs/demo-script.md)
+- [Claims Register & Copy Verification Policy](docs/claims-register.md)
+- [Architecture & Data Flow Specifications](docs/architecture.md)
+- [AMD ROCm & Developer Cloud Setup](docs/amd-setup.md)
+- [Infrastructure as Code (Terraform)](infra/terraform/README.md)
+
 
 ---
 

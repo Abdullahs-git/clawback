@@ -597,3 +597,49 @@ def test_coverage_edge_cases():
     rule_min_no_amount = RuleDefinition(id="R", type="minimum_charge", description="", parameters={}, source_page=1, source_quote="")
     line_min = make_line(charge_code="MIN", amount_billed=Decimal("50.00"))
     assert audit_minimum_charge(line_min, rule_min_no_amount) is None
+
+    # 5. dim_weight when actual weight >= dim weight
+    rule_dim = RuleDefinition(id="R", type="dim_weight_divisor", description="", parameters={"divisor": 166}, source_page=1, source_quote="")
+    line_heavy = make_line(
+        charge_code="FRT",
+        amount_billed=Decimal("100.00"),
+        dim_length_in=Decimal("10"),
+        dim_width_in=Decimal("10"),
+        dim_height_in=Decimal("10"),
+        weight_actual_lbs=Decimal("50.00"),  # Dim weight is 1000/166 = 6.02 lbs, actual is 50 lbs
+        billed_weight_lbs=Decimal("50.00")
+    )
+    assert audit_dim_weight(line_heavy, rule_dim) is None
+
+    # dim_weight overcharge <= 0 branch
+    line_dim_tiny = make_line(
+        charge_code="FRT",
+        amount_billed=Decimal("0.01"),
+        dim_length_in=Decimal("10"),
+        dim_width_in=Decimal("10"),
+        dim_height_in=Decimal("10"),
+        weight_actual_lbs=Decimal("10.00"),
+        billed_weight_lbs=Decimal("10.001")
+    )
+    assert audit_dim_weight(line_dim_tiny, rule_dim) is None
+
+    # 6. fuel_surcharge with no fuel_surcharge_percent on line
+    rule_fuel = RuleDefinition(id="R", type="fuel_surcharge", description="", parameters={"fixed_percentage": "0.12"}, source_page=1, source_quote="")
+    line_no_fuel_pct = make_line(charge_code="FSC", amount_billed=Decimal("50.00"), fuel_surcharge_percent=None)
+    assert audit_fuel_surcharge(line_no_fuel_pct, rule_fuel) is None
+
+    # fuel_surcharge with max_percentage parameter only
+    rule_max_fuel = RuleDefinition(id="R", type="fuel_surcharge", description="", parameters={"max_percentage": "0.15"}, source_page=1, source_quote="")
+    line_max_fuel = make_line(charge_code="FSC", amount_billed=Decimal("50.00"), fuel_surcharge_percent=Decimal("0.18"))
+    assert audit_fuel_surcharge(line_max_fuel, rule_max_fuel) is not None
+
+    # fuel_surcharge with neither fixed nor max percentage (e.g. empty parameters)
+    rule_empty_fuel = RuleDefinition(id="R", type="fuel_surcharge", description="", parameters={}, source_page=1, source_quote="")
+    line_empty_fuel = make_line(charge_code="FSC", amount_billed=Decimal("50.00"), fuel_surcharge_percent=Decimal("0.18"))
+    assert audit_fuel_surcharge(line_empty_fuel, rule_empty_fuel) is None
+
+    # 7. package __init__ verification
+    from rules_engine import AuditEngine as TopAuditEngine
+    assert TopAuditEngine is not None
+
+

@@ -16,8 +16,8 @@ def audit_fuel_surcharge(
     """
     Evaluates whether fuel surcharge was billed according to contractual terms.
     Parameters in rule:
-      - fixed_percentage: Decimal/str/float (e.g. 0.12 for 12%)
-      - max_percentage: Decimal/str/float
+      - fixed_percentage: Decimal or str (e.g. "0.12" for 12%)
+      - max_percentage: Decimal or str
       - table: list of dicts [{'min_price': x, 'max_price': y, 'percentage': z}]
     """
     if line.charge_code.upper() not in ["FSC", "FUEL", "FUEL_SURCHARGE"]:

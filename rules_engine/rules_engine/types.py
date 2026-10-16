@@ -15,7 +15,7 @@ class RuleDefinition:
     parameters: Dict[str, Any]
     source_page: int
     source_quote: str
-    confidence: float = 1.0
+    confidence: Decimal = Decimal("1.00")
     status: str = "approved"
 
 

@@ -1,0 +1,6 @@
+aws_region            = "us-east-1"
+environment           = "demo"
+instance_type         = "t3.medium"
+admin_ssh_cidr_blocks = ["YOUR_IP/32"]
+llm_base_url          = "https://notebooks.amd.com/v1"
+llm_api_key           = "YOUR_AMD_API_KEY"

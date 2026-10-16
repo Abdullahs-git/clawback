@@ -16,7 +16,7 @@ def audit_minimum_charge(
     """
     Evaluates whether an applied minimum charge exceeds the contractual cap or agreed rate.
     Parameters in rule:
-      - amount: Decimal/str/float (e.g. 45.00)
+      - amount: Decimal or str (e.g. "45.00")
       - service_level: optional str
     """
     rule_service = rule.parameters.get("service_level")

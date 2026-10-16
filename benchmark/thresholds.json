@@ -1,0 +1,8 @@
+{
+  "min_extraction_precision": 0.95,
+  "min_extraction_recall": 0.95,
+  "min_quote_verification_rate": 1.00,
+  "min_audit_recall": 1.00,
+  "min_audit_precision": 0.99,
+  "max_dollar_variance_percentage": 0.01
+}
