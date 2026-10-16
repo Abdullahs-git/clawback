@@ -1,0 +1,530 @@
+openapi: 3.0.3
+info:
+  title: Clawback API
+  description: >
+    Deterministic Carrier Contract Audit & Overcharge Recovery Engine.
+    Extracts human-reviewable rules with Gemma on AMD infrastructure,
+    verifies invoice discrepancies with 100% deterministic Decimal math,
+    and drafts approved dispute letters.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000
+    description: Local Development Server
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      description: Returns service health, uptime, and current LLM operational mode.
+      responses:
+        '200':
+          description: Service healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: "ok" }
+                  app_name: { type: string, example: "Clawback" }
+                  version: { type: string, example: "1.0.0" }
+                  llm_mode: { type: string, enum: ["live", "replay"], example: "replay" }
+
+  /api/amd-status:
+    get:
+      summary: AMD LLM telemetry and operational status
+      description: >
+        Returns AMD inference host information, latency, tokens per second,
+        session call counters, and live vs replay status. Used by the AMD Panel.
+      responses:
+        '200':
+          description: Telemetry data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AmdPanelMetrics'
+
+  /api/contracts/upload:
+    post:
+      summary: Upload carrier contract (PDF)
+      description: Parses text layer of PDF, extracts rules via Gemma on AMD, verifies clause quotes.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: PDF contract with text layer
+                carrier_name:
+                  type: string
+                  description: Optional carrier name override
+      responses:
+        '201':
+          description: Contract processed and rules extracted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContractDetail'
+
+  /api/contracts:
+    get:
+      summary: List uploaded contracts
+      responses:
+        '200':
+          description: List of contracts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContractSummary'
+
+  /api/contracts/{contract_id}:
+    get:
+      summary: Get contract details with extracted rules
+      parameters:
+        - name: contract_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Contract and rule details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContractDetail'
+
+  /api/contracts/{contract_id}/rules/{rule_id}:
+    patch:
+      summary: Approve, reject, or edit an extracted contract rule
+      parameters:
+        - name: contract_id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: rule_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [proposed, approved, rejected]
+                parameters:
+                  type: object
+                description:
+                  type: string
+      responses:
+        '200':
+          description: Rule updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContractRule'
+
+  /api/contracts/{contract_id}/rules/batch:
+    post:
+      summary: Batch approve or reject rules
+      parameters:
+        - name: contract_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action, rule_ids]
+              properties:
+                action:
+                  type: string
+                  enum: [approve, reject]
+                rule_ids:
+                  type: array
+                  items: { type: string }
+      responses:
+        '200':
+          description: Batch result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updated_count: { type: integer }
+
+  /api/invoices/upload:
+    post:
+      summary: Upload carrier invoices (CSV or PDF)
+      description: Ingests invoice line items into normalized records.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                carrier_name:
+                  type: string
+      responses:
+        '201':
+          description: Invoices ingested
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoiceBatchSummary'
+
+  /api/invoices:
+    get:
+      summary: List invoice batches
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InvoiceBatchSummary'
+
+  /api/invoices/{batch_id}/lines:
+    get:
+      summary: Get line items for an invoice batch
+      parameters:
+        - name: batch_id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 50 }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/InvoiceLineItem'
+                  total: { type: integer }
+                  page: { type: integer }
+                  limit: { type: integer }
+
+  /api/audit/run:
+    post:
+      summary: Execute deterministic audit engine
+      description: Evaluates all invoice lines against approved rules using Decimal arithmetic.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [batch_id, contract_id]
+              properties:
+                batch_id: { type: string }
+                contract_id: { type: string }
+      responses:
+        '200':
+          description: Audit completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditRunResult'
+
+  /api/audit/findings:
+    get:
+      summary: Query audit findings and summary totals
+      parameters:
+        - name: batch_id
+          in: query
+          schema: { type: string }
+        - name: carrier_name
+          in: query
+          schema: { type: string }
+        - name: rule_type
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditFindingsOverview'
+
+  /api/audit/findings/{finding_id}:
+    get:
+      summary: Drill into single finding traceability
+      parameters:
+        - name: finding_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditFindingDetail'
+
+  /api/disputes/generate:
+    post:
+      summary: Draft carrier dispute letter
+      description: Injects calculated claim totals and evidence into letter template; reviews with human.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [batch_id, carrier_name]
+              properties:
+                batch_id: { type: string }
+                carrier_name: { type: string }
+                finding_ids:
+                  type: array
+                  items: { type: string }
+                  description: Optional subset of findings. Defaults to all open findings in batch.
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisputeLetter'
+
+  /api/disputes:
+    get:
+      summary: List dispute letters
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DisputeLetter'
+
+  /api/disputes/{letter_id}:
+    get:
+      summary: Get dispute letter
+      parameters:
+        - name: letter_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisputeLetter'
+    patch:
+      summary: Edit or approve dispute letter
+      parameters:
+        - name: letter_id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                subject_line: { type: string }
+                body_markdown: { type: string }
+                status:
+                  type: string
+                  enum: [draft, approved, exported]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisputeLetter'
+
+  /api/disputes/{letter_id}/export:
+    get:
+      summary: Export dispute letter as Markdown or formatted file
+      parameters:
+        - name: letter_id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: format
+          in: query
+          schema: { type: string, enum: [markdown, pdf], default: markdown }
+      responses:
+        '200':
+          description: Exported document
+          content:
+            text/markdown:
+              schema: { type: string }
+            application/pdf:
+              schema: { type: string, format: binary }
+
+components:
+  schemas:
+    ContractSummary:
+      type: object
+      properties:
+        id: { type: string }
+        carrier_name: { type: string }
+        filename: { type: string }
+        uploaded_at: { type: string, format: date-time }
+        rule_count: { type: integer }
+        approved_rule_count: { type: integer }
+
+    ContractDetail:
+      type: object
+      properties:
+        id: { type: string }
+        carrier_name: { type: string }
+        filename: { type: string }
+        uploaded_at: { type: string, format: date-time }
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContractRule'
+
+    ContractRule:
+      type: object
+      properties:
+        id: { type: string }
+        contract_id: { type: string }
+        type: { type: string }
+        description: { type: string }
+        parameters: { type: object }
+        source_page: { type: integer }
+        source_quote: { type: string }
+        confidence: { type: number }
+        status: { type: string, enum: [proposed, approved, rejected] }
+        rejection_reason: { type: string, nullable: true }
+
+    InvoiceBatchSummary:
+      type: object
+      properties:
+        id: { type: string }
+        carrier_name: { type: string }
+        filename: { type: string }
+        uploaded_at: { type: string, format: date-time }
+        total_lines: { type: integer }
+        total_billed_amount: { type: string }
+
+    InvoiceLineItem:
+      type: object
+      properties:
+        line_id: { type: string }
+        invoice_number: { type: string }
+        invoice_date: { type: string }
+        shipment_id: { type: string }
+        charge_code: { type: string }
+        charge_description: { type: string }
+        amount_billed: { type: string }
+
+    AuditRunResult:
+      type: object
+      properties:
+        batch_id: { type: string }
+        contract_id: { type: string }
+        lines_audited: { type: integer }
+        discrepancies_count: { type: integer }
+        total_overcharge_amount: { type: string }
+        completed_at: { type: string, format: date-time }
+
+    AuditFindingsOverview:
+      type: object
+      properties:
+        total_overcharge: { type: string }
+        total_findings_count: { type: integer }
+        by_category:
+          type: object
+          additionalProperties: { type: string }
+        by_carrier:
+          type: object
+          additionalProperties: { type: string }
+        findings:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditFindingDetail'
+
+    AuditFindingDetail:
+      type: object
+      properties:
+        finding_id: { type: string }
+        carrier_name: { type: string }
+        invoice_number: { type: string }
+        invoice_date: { type: string }
+        line_id: { type: string }
+        shipment_id: { type: string }
+        charge_code: { type: string }
+        rule_id: { type: string }
+        rule_type: { type: string }
+        rule_description: { type: string }
+        contract_page: { type: integer }
+        contract_clause_quote: { type: string }
+        expected_amount: { type: string }
+        billed_amount: { type: string }
+        overcharge_amount: { type: string }
+        calculation_math: { type: string }
+        claim_deadline_date: { type: string, nullable: true }
+        days_remaining_to_claim: { type: integer, nullable: true }
+        status: { type: string }
+
+    DisputeLetter:
+      type: object
+      properties:
+        letter_id: { type: string }
+        batch_id: { type: string }
+        carrier_name: { type: string }
+        shipper_name: { type: string }
+        date_generated: { type: string }
+        total_claim_amount: { type: string }
+        total_disputed_items: { type: integer }
+        subject_line: { type: string }
+        body_markdown: { type: string }
+        status: { type: string }
+        evidence_table:
+          type: array
+          items: { type: object }
+
+    AmdPanelMetrics:
+      type: object
+      properties:
+        model_name: { type: string }
+        endpoint_host: { type: string }
+        mode: { type: string, enum: [live, replay] }
+        is_connected: { type: boolean }
+        total_calls: { type: integer }
+        total_prompt_tokens: { type: integer }
+        total_completion_tokens: { type: integer }
+        average_latency_ms: { type: number }
+        average_tokens_per_second: { type: number }
+        recent_calls:
+          type: array
+          items: { type: object }

@@ -1,0 +1,85 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://clawback.local/schemas/amd_metrics.json",
+  "title": "AmdPanelMetrics",
+  "description": "Metrics and operational status for the AMD inference endpoint and model telemetry",
+  "type": "object",
+  "required": [
+    "model_name",
+    "endpoint_host",
+    "mode",
+    "is_connected",
+    "total_calls",
+    "total_prompt_tokens",
+    "total_completion_tokens",
+    "average_latency_ms",
+    "average_tokens_per_second",
+    "recent_calls"
+  ],
+  "properties": {
+    "model_name": {
+      "type": "string",
+      "description": "Pinned model identifier, e.g. 'google/gemma-2-9b-it'"
+    },
+    "endpoint_host": {
+      "type": "string",
+      "description": "Sanitized endpoint host (never reveals API keys), e.g. 'notebooks.amd.com'"
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["live", "replay"],
+      "description": "'live' for live AMD ROCm/vLLM endpoint; 'replay' for recorded AMD sessions"
+    },
+    "is_connected": {
+      "type": "boolean",
+      "description": "Whether health check against AMD endpoint succeeds"
+    },
+    "total_calls": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "total_prompt_tokens": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "total_completion_tokens": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "average_latency_ms": {
+      "type": "number",
+      "minimum": 0
+    },
+    "average_tokens_per_second": {
+      "type": "number",
+      "minimum": 0
+    },
+    "recent_calls": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "call_id",
+          "timestamp",
+          "operation",
+          "latency_ms",
+          "prompt_tokens",
+          "completion_tokens",
+          "tokens_per_second",
+          "mode"
+        ],
+        "properties": {
+          "call_id": { "type": "string" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "operation": { "type": "string" },
+          "latency_ms": { "type": "number" },
+          "prompt_tokens": { "type": "integer" },
+          "completion_tokens": { "type": "integer" },
+          "tokens_per_second": { "type": "number" },
+          "mode": { "type": "string", "enum": ["live", "replay"] },
+          "status": { "type": "string", "enum": ["success", "error", "fallback"] }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,122 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://clawback.local/schemas/invoice.json",
+  "title": "NormalizedInvoiceBatch",
+  "description": "Schema for normalized invoice data parsed from CSV or PDF uploads",
+  "type": "object",
+  "required": ["batch_id", "carrier_name", "line_items"],
+  "properties": {
+    "batch_id": {
+      "type": "string",
+      "description": "Unique identifier for this invoice upload batch"
+    },
+    "carrier_name": {
+      "type": "string",
+      "description": "Carrier billing these invoices"
+    },
+    "uploaded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "total_lines": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "total_billed_amount": {
+      "type": "string",
+      "description": "Total gross amount billed as Decimal string (e.g. '14250.75')"
+    },
+    "line_items": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/InvoiceLineItem"
+      }
+    }
+  },
+  "definitions": {
+    "InvoiceLineItem": {
+      "type": "object",
+      "required": [
+        "line_id",
+        "invoice_number",
+        "invoice_date",
+        "shipment_id",
+        "charge_code",
+        "amount_billed"
+      ],
+      "properties": {
+        "line_id": {
+          "type": "string",
+          "description": "Unique identifier for invoice line item"
+        },
+        "invoice_number": {
+          "type": "string"
+        },
+        "invoice_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "shipment_id": {
+          "type": "string",
+          "description": "Shipment tracking number or BOL"
+        },
+        "charge_code": {
+          "type": "string",
+          "description": "Standardized or carrier charge code (e.g., FRT, FSC, RES, LFT)"
+        },
+        "charge_description": {
+          "type": "string"
+        },
+        "service_level": {
+          "type": "string",
+          "description": "e.g., Ground, 2Day, Standard LTL"
+        },
+        "origin_zip": {
+          "type": "string"
+        },
+        "destination_zip": {
+          "type": "string"
+        },
+        "zone": {
+          "type": "string"
+        },
+        "weight_actual_lbs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "dim_length_in": {
+          "type": "number",
+          "minimum": 0
+        },
+        "dim_width_in": {
+          "type": "number",
+          "minimum": 0
+        },
+        "dim_height_in": {
+          "type": "number",
+          "minimum": 0
+        },
+        "billed_weight_lbs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "published_rate": {
+          "type": "string",
+          "description": "Base rate before discount as Decimal string"
+        },
+        "discount_applied_percent": {
+          "type": "string",
+          "description": "Discount percentage shown on invoice as Decimal string"
+        },
+        "fuel_surcharge_percent": {
+          "type": "string",
+          "description": "Fuel surcharge percentage shown on invoice as Decimal string"
+        },
+        "amount_billed": {
+          "type": "string",
+          "description": "Exact billed charge amount as Decimal string"
+        }
+      }
+    }
+  }
+}

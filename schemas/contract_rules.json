@@ -1,0 +1,101 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://clawback.local/schemas/contract_rules.json",
+  "title": "ContractRulesExtraction",
+  "description": "Schema for rules extracted from carrier contract documents",
+  "type": "object",
+  "required": ["carrier_name", "contract_reference", "rules"],
+  "properties": {
+    "carrier_name": {
+      "type": "string",
+      "description": "Name of the carrier (e.g. Apex Freight Logistics)"
+    },
+    "contract_reference": {
+      "type": "string",
+      "description": "Contract number or agreement title"
+    },
+    "effective_date": {
+      "type": "string",
+      "format": "date",
+      "description": "ISO format date when agreement takes effect"
+    },
+    "expiration_date": {
+      "type": "string",
+      "format": "date",
+      "description": "ISO format date when agreement expires"
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/ContractRule"
+      }
+    }
+  },
+  "definitions": {
+    "ContractRule": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "parameters",
+        "source_page",
+        "source_quote",
+        "confidence",
+        "status"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the rule (e.g., RULE-001 or UUID)"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "base_discount",
+            "accessorial_rule",
+            "fuel_surcharge",
+            "dim_weight_divisor",
+            "minimum_charge",
+            "duplicate_charge",
+            "claim_window_days"
+          ],
+          "description": "Type of rule extracted from the contract"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable summary of the rule"
+        },
+        "parameters": {
+          "type": "object",
+          "description": "Parameters specific to rule type. Amounts and percentages are expressed deterministically."
+        },
+        "source_page": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "1-based page number where the clause appears in the contract"
+        },
+        "source_quote": {
+          "type": "string",
+          "minLength": 5,
+          "description": "Verbatim quote extracted from the contract text. Must match document text exactly."
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Confidence score from model extraction (0.0 - 1.0)"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["proposed", "approved", "rejected"],
+          "default": "proposed",
+          "description": "Approval workflow state"
+        },
+        "rejection_reason": {
+          "type": "string",
+          "description": "Reason rule was rejected (e.g. quote mismatch, user rejected)"
+        }
+      }
+    }
+  }
+}

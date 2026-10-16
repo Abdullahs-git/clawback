@@ -1,0 +1,107 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://clawback.local/schemas/dispute_letter.json",
+  "title": "DisputeLetter",
+  "description": "Formal carrier dispute letter with attached itemized evidence table",
+  "type": "object",
+  "required": [
+    "letter_id",
+    "carrier_name",
+    "shipper_name",
+    "date_generated",
+    "total_claim_amount",
+    "total_disputed_items",
+    "subject_line",
+    "body_markdown",
+    "evidence_table",
+    "status"
+  ],
+  "properties": {
+    "letter_id": {
+      "type": "string"
+    },
+    "batch_id": {
+      "type": "string"
+    },
+    "carrier_name": {
+      "type": "string"
+    },
+    "carrier_contact_email": {
+      "type": "string"
+    },
+    "shipper_name": {
+      "type": "string"
+    },
+    "shipper_contact_name": {
+      "type": "string"
+    },
+    "shipper_contact_email": {
+      "type": "string"
+    },
+    "date_generated": {
+      "type": "string",
+      "format": "date"
+    },
+    "earliest_deadline_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "total_claim_amount": {
+      "type": "string",
+      "description": "Total sum claimed as Decimal string (e.g. '1842.50'), strictly matching sum of evidence items"
+    },
+    "total_disputed_items": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "subject_line": {
+      "type": "string"
+    },
+    "body_markdown": {
+      "type": "string",
+      "description": "Markdown body text of dispute letter"
+    },
+    "evidence_table": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "finding_id",
+          "shipment_id",
+          "invoice_number",
+          "charge_code",
+          "contract_clause_reference",
+          "billed_amount",
+          "expected_amount",
+          "claim_amount"
+        ],
+        "properties": {
+          "finding_id": { "type": "string" },
+          "shipment_id": { "type": "string" },
+          "invoice_number": { "type": "string" },
+          "invoice_date": { "type": "string" },
+          "charge_code": { "type": "string" },
+          "charge_description": { "type": "string" },
+          "contract_clause_reference": { "type": "string" },
+          "contract_page": { "type": "integer" },
+          "billed_amount": { "type": "string" },
+          "expected_amount": { "type": "string" },
+          "claim_amount": { "type": "string" },
+          "explanation": { "type": "string" }
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "approved", "exported"],
+      "default": "draft"
+    },
+    "approved_by": {
+      "type": "string"
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}
