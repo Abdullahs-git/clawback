@@ -3,10 +3,11 @@ Contracts & Rules API Router.
 Handles contract PDF upload, rule extraction via Gemma on AMD,
 and human-in-the-loop rule approval/rejection.
 """
+import re
 from pathlib import Path
 from typing import List
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Request
 from sqlalchemy.orm import Session
 
 from backend.app.config import settings
@@ -20,12 +21,14 @@ from backend.app.schemas.contract import (
     ContractBatchRulesUpdate
 )
 from backend.app.services.extraction import extract_contract_rules
+from backend.app.services.rate_limiter import check_upload_rate_limit, check_llm_rate_limit
 
 router = APIRouter(prefix="/api/contracts", tags=["Contracts & Rules"])
 
 
 @router.post("/upload", response_model=ContractDetailResponse, status_code=201)
 async def upload_contract(
+    request: Request,
     file: UploadFile = File(...),
     carrier_name: str = Form(None),
     db: Session = Depends(get_db)
@@ -33,29 +36,39 @@ async def upload_contract(
     """
     Uploads a carrier contract PDF, extracts rules using Gemma on AMD,
     verifies source quotes against the document text, and persists rules for human review.
+    Enforces rate limits, magic byte validation, and filename sanitization.
     """
-    if not file.filename.lower().endswith(".pdf"):
+    check_upload_rate_limit(request)
+    check_llm_rate_limit(request)
+
+    clean_filename = re.sub(r'[^a-zA-Z0-9_.-]', '_', Path(file.filename or "contract.pdf").name)
+    if not clean_filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF contracts are supported.")
 
     content = await file.read()
-    if len(content) > settings.MAX_UPLOAD_SIZE_MB * 1024 * 1024:
+    max_mb = 5 if getattr(settings, "DEMO_MODE", False) else settings.MAX_UPLOAD_SIZE_MB
+    if len(content) > max_mb * 1024 * 1024:
         raise HTTPException(
             status_code=413,
-            detail=f"File exceeds maximum upload size of {settings.MAX_UPLOAD_SIZE_MB}MB"
+            detail=f"File exceeds maximum upload size of {max_mb}MB"
         )
+
+    # Validate PDF magic bytes
+    if not content.startswith(b"%PDF-"):
+        raise HTTPException(status_code=400, detail="Invalid PDF format: missing PDF header signature.")
 
     # Save uploaded file
     upload_dir = Path(settings.UPLOAD_DIR)
     upload_dir.mkdir(parents=True, exist_ok=True)
-    saved_path = upload_dir / f"{uuid.uuid4()}_{file.filename}"
+    saved_path = upload_dir / f"{uuid.uuid4()}_{clean_filename}"
     with open(saved_path, "wb") as f:
         f.write(content)
 
     # Extract rules via Gemma pipeline
-    carrier_hint = carrier_name or file.filename.replace(".pdf", "").replace("_", " ").title()
+    carrier_hint = carrier_name or clean_filename.replace(".pdf", "").replace("_", " ").title()
     extraction = await extract_contract_rules(
         pdf_bytes=content,
-        filename=file.filename,
+        filename=clean_filename,
         carrier_hint=carrier_hint,
         db=db,
         cache_key=f"contract_{carrier_hint.lower().replace(' ', '_')}"

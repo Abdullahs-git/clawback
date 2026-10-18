@@ -147,5 +147,6 @@ export interface AmdPanelMetrics {
   total_completion_tokens: number;
   average_latency_ms: number;
   average_tokens_per_second: number;
+  last_live_call_timestamp?: string | null;
   recent_calls: AmdRecentCall[];
 }

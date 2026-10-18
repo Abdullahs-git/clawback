@@ -64,6 +64,18 @@ app.include_router(amd_status_router)
 app.include_router(demo_router)
 
 
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception):
+    """Sanitizes unhandled errors to avoid leaking stack traces or internal secrets."""
+    import logging
+    logging.getLogger("clawback").error(f"Internal error on {request.url.path}: {exc}", exc_info=True)
+    from fastapi.responses import JSONResponse
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "An unexpected error occurred. Request logged for security review."}
+    )
+
+
 @app.get("/health", tags=["Health"])
 def health_check():
     """Health check endpoint."""

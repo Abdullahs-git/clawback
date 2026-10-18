@@ -6,9 +6,10 @@ import csv
 from decimal import Decimal, ROUND_HALF_UP
 import io
 from pathlib import Path
+import re
 from typing import List, Optional
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Form, Request
 from sqlalchemy.orm import Session
 
 from backend.app.config import settings
@@ -19,6 +20,7 @@ from backend.app.schemas.invoice import (
     InvoiceLineItemResponse,
     InvoiceLinesPagination
 )
+from backend.app.services.rate_limiter import check_upload_rate_limit
 
 router = APIRouter(prefix="/api/invoices", tags=["Invoices"])
 
@@ -87,6 +89,7 @@ def parse_csv_invoices(csv_content: str, batch_id: str) -> List[InvoiceLine]:
 
 @router.post("/upload", response_model=InvoiceBatchSummary, status_code=201)
 async def upload_invoices(
+    request: Request,
     file: UploadFile = File(...),
     carrier_name: str = Form(None),
     db: Session = Depends(get_db)
@@ -94,23 +97,31 @@ async def upload_invoices(
     """
     Ingests invoice records (CSV format supported; PDF text layer supported).
     Normalizes line items and saves batch for deterministic auditing.
+    Enforces upload rate limits and 5MB cap in demo mode.
     """
-    filename = file.filename.lower()
+    check_upload_rate_limit(request)
+
+    clean_filename = re.sub(r'[^a-zA-Z0-9_.-]', '_', Path(file.filename or "invoices.csv").name)
+    filename = clean_filename.lower()
     if not (filename.endswith(".csv") or filename.endswith(".pdf")):
         raise HTTPException(status_code=400, detail="Only CSV or PDF invoice files are supported.")
 
     content = await file.read()
-    if len(content) > settings.MAX_UPLOAD_SIZE_MB * 1024 * 1024:
-        raise HTTPException(status_code=413, detail="File exceeds maximum upload size.")
+    max_mb = 5 if getattr(settings, "DEMO_MODE", False) else settings.MAX_UPLOAD_SIZE_MB
+    if len(content) > max_mb * 1024 * 1024:
+        raise HTTPException(status_code=413, detail=f"File exceeds maximum upload size of {max_mb}MB.")
+
+    if filename.endswith(".pdf") and not content.startswith(b"%PDF-"):
+        raise HTTPException(status_code=400, detail="Invalid PDF format: missing PDF header signature.")
 
     upload_dir = Path(settings.UPLOAD_DIR)
     upload_dir.mkdir(parents=True, exist_ok=True)
     batch_id = str(uuid.uuid4())
-    saved_path = upload_dir / f"{batch_id}_{file.filename}"
+    saved_path = upload_dir / f"{batch_id}_{clean_filename}"
     with open(saved_path, "wb") as f:
         f.write(content)
 
-    detected_carrier = carrier_name or file.filename.replace(".csv", "").replace(".pdf", "").replace("_", " ").title()
+    detected_carrier = carrier_name or clean_filename.replace(".csv", "").replace(".pdf", "").replace("_", " ").title()
 
     lines: List[InvoiceLine] = []
     if filename.endswith(".csv"):
@@ -122,7 +133,7 @@ async def upload_invoices(
     batch = InvoiceBatch(
         id=batch_id,
         carrier_name=detected_carrier,
-        filename=file.filename,
+        filename=clean_filename,
         file_path=str(saved_path),
         total_lines=len(lines),
         total_billed_amount=f"{total_billed:.2f}"

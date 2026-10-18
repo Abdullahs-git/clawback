@@ -1,6 +1,7 @@
-import React from 'react';
-import { Cpu, Activity, Clock, Zap, Server, CheckCircle2, AlertCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { Cpu, Activity, Clock, Zap, Server, CheckCircle2, AlertCircle, Play, X } from 'lucide-react';
 import { AmdPanelMetrics } from '../types';
+import { api } from '../api/client';
 
 interface AmdPanelProps {
   metrics: AmdPanelMetrics | null;
@@ -9,6 +10,9 @@ interface AmdPanelProps {
 }
 
 export const AmdPanel: React.FC<AmdPanelProps> = ({ metrics, loading, onRefresh }) => {
+  const [testingLive, setTestingLive] = useState(false);
+  const [liveTestResult, setLiveTestResult] = useState<any>(null);
+
   if (loading && !metrics) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
@@ -19,6 +23,22 @@ export const AmdPanel: React.FC<AmdPanelProps> = ({ metrics, loading, onRefresh 
 
   const isConnected = metrics?.is_connected ?? true;
   const mode = metrics?.mode ?? 'replay';
+  const lastLiveTs = metrics?.last_live_call_timestamp 
+    ? new Date(metrics.last_live_call_timestamp).toLocaleString()
+    : null;
+
+  const handleRunLiveTest = async () => {
+    setTestingLive(true);
+    try {
+      const res = await api.runLiveTestCall();
+      setLiveTestResult(res);
+      onRefresh();
+    } catch (err) {
+      console.error('Failed to run live test call:', err);
+    } finally {
+      setTestingLive(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -40,16 +60,75 @@ export const AmdPanel: React.FC<AmdPanelProps> = ({ metrics, loading, onRefresh 
             <p className="mt-1 text-sm text-slate-300">
               Live operational metrics for legal rule extraction powered by Google Gemma on AMD Developer Cloud / ROCm infrastructure.
             </p>
+            <p className="mt-1 font-mono text-xs text-slate-400">
+              Last Successful Live Call: {lastLiveTs ? <strong className="text-emerald-400">{lastLiveTs}</strong> : <span className="text-amber-400">No live call recorded in session (REPLAY active)</span>}
+            </p>
           </div>
 
-          <button
-            onClick={onRefresh}
-            className="self-start rounded-lg border border-slate-700 bg-slate-800 px-3.5 py-2 text-xs font-semibold text-slate-200 transition hover:bg-slate-700"
-          >
-            Refresh Telemetry
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={handleRunLiveTest}
+              disabled={testingLive}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3.5 py-2 text-xs font-bold text-white shadow-md hover:bg-rose-500 disabled:opacity-50 transition"
+            >
+              <Zap className={`h-3.5 w-3.5 ${testingLive ? 'animate-pulse' : ''}`} />
+              <span>{testingLive ? 'Running Live Call...' : 'Run Live Extraction Test'}</span>
+            </button>
+
+            <button
+              onClick={onRefresh}
+              className="rounded-lg border border-slate-700 bg-slate-800 px-3.5 py-2 text-xs font-semibold text-slate-200 transition hover:bg-slate-700"
+            >
+              Refresh Telemetry
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Live Test Result Callout Modal */}
+      {liveTestResult && (
+        <div className="rounded-2xl border border-rose-500/40 bg-slate-900 p-6 text-white shadow-xl">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div className="flex items-center gap-2">
+              <Zap className="h-5 w-5 text-rose-400" />
+              <h3 className="font-bold text-sm">Live Extraction Verification Test Results</h3>
+              <span className="rounded bg-rose-500/20 px-2 py-0.5 font-mono text-[11px] font-semibold text-rose-300">
+                Mode: {liveTestResult.mode?.toUpperCase()}
+              </span>
+            </div>
+            <button
+              onClick={() => setLiveTestResult(null)}
+              className="rounded p-1 text-slate-400 hover:bg-slate-800"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4 font-mono text-xs">
+            <div className="rounded-lg bg-slate-800/60 p-3">
+              <span className="text-slate-400 text-[10px] block uppercase">Raw Latency</span>
+              <span className="text-base font-bold text-white">{liveTestResult.latency_ms} ms</span>
+            </div>
+            <div className="rounded-lg bg-slate-800/60 p-3">
+              <span className="text-slate-400 text-[10px] block uppercase">Throughput</span>
+              <span className="text-base font-bold text-rose-400">{liveTestResult.tokens_per_second} tps</span>
+            </div>
+            <div className="rounded-lg bg-slate-800/60 p-3">
+              <span className="text-slate-400 text-[10px] block uppercase">Tokens (In / Out)</span>
+              <span className="text-base font-bold text-white">{liveTestResult.prompt_tokens} / {liveTestResult.completion_tokens}</span>
+            </div>
+            <div className="rounded-lg bg-slate-800/60 p-3">
+              <span className="text-slate-400 text-[10px] block uppercase">Inference Host</span>
+              <span className="text-xs font-bold text-white truncate block">{liveTestResult.endpoint_host}</span>
+            </div>
+          </div>
+
+          <div className="mt-4 rounded-lg bg-slate-950 p-4 font-mono text-xs text-slate-300 overflow-x-auto">
+            <p className="text-[10px] font-bold uppercase text-slate-400 mb-1">Parsed Rule Output from Gemma on AMD:</p>
+            <pre>{JSON.stringify(liveTestResult.extracted_data, null, 2)}</pre>
+          </div>
+        </div>
+      )}
 
       {/* Primary KPI Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

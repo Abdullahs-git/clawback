@@ -172,5 +172,12 @@ export const api = {
   getBenchmark: async (): Promise<any> => {
     const res = await fetch(`${API_BASE}/api/benchmark`);
     return handleResponse<any>(res);
+  },
+
+  runLiveTestCall: async (): Promise<any> => {
+    const res = await fetch(`${API_BASE}/api/amd/live-test-call`, {
+      method: 'POST'
+    });
+    return handleResponse<any>(res);
   }
 };

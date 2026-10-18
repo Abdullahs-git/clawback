@@ -2,7 +2,7 @@
 Pydantic v2 schemas for AMD panel metrics and telemetry.
 """
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel, ConfigDict
 
 
@@ -29,4 +29,5 @@ class AmdPanelMetricsResponse(BaseModel):
     total_completion_tokens: int
     average_latency_ms: float
     average_tokens_per_second: float
+    last_live_call_timestamp: Optional[datetime] = None
     recent_calls: List[AmdRecentCall] = []
