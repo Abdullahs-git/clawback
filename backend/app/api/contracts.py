@@ -195,3 +195,32 @@ def batch_update_rules(
 
     db.commit()
     return {"updated_count": updated}
+
+
+@router.get("/{contract_id}/text")
+def get_contract_text(contract_id: str, db: Session = Depends(get_db)):
+    """Extracts and returns page text for the contract PDF to support contract viewer quote grounding."""
+    from pathlib import Path
+    contract = db.query(Contract).filter(Contract.id == contract_id).first()
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found.")
+
+    pages = []
+    if contract.file_path and Path(contract.file_path).exists():
+        try:
+            import pypdf
+            reader = pypdf.PdfReader(contract.file_path)
+            for i, p in enumerate(reader.pages):
+                pages.append({
+                    "page_number": i + 1,
+                    "text": p.extract_text() or ""
+                })
+        except Exception:
+            pass
+
+    return {
+        "contract_id": contract.id,
+        "carrier_name": contract.carrier_name,
+        "filename": contract.filename,
+        "pages": pages
+    }
