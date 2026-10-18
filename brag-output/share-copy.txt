@@ -1,0 +1,2 @@
+Shippers lose millions each year to carrier freight invoice overcharges buried across thousands of line items. We built Clawback: a two-stage engine where Gemma on AMD ROCm extracts contract clauses with citation quotes, while a pure Python Decimal engine performs 100% deterministic audits with zero LLM math. Audited across 1,250 freight bills, Clawback recovered $9,130.51 across 284 itemized findings with $0.00 mathematical variance. Built for AMD Developer Hackathon: ACT III (Track 3: Reinvent Commerce).
+https://github.com/Abdullahs-git/clawback

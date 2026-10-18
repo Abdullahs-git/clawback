@@ -58,3 +58,5 @@ test-results/
 temp/
 scratch/
 tmp/
+brag-output/work/*.png
+brag-output/work/*.m4a
