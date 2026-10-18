@@ -3,10 +3,12 @@ Dispute Letter Generation & Export Service.
 Generates carrier dispute letters with 100% deterministic Decimal money totals,
 verbatim contract citations, and structured evidence tables.
 """
+import logging
+import re
 from datetime import date
 from decimal import Decimal, ROUND_HALF_UP
 import io
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -14,7 +16,94 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 
 from backend.app.models.finding import AuditFinding
 
+logger = logging.getLogger("clawback.dispute")
 TWO_PLACES = Decimal("0.01")
+
+
+def extract_numeric_tokens(text: str) -> List[str]:
+    """Extracts currency or dollar/cents decimal tokens from text (e.g. $65.00, $65, 65.00)."""
+    raw_matches = re.findall(r'\$\s*\d+(?:\.\d{1,2})?|\b\d+\.\d{2}\b', text)
+    cleaned = []
+    for m in raw_matches:
+        val = m.replace('$', '').strip()
+        cleaned.append(val)
+    return cleaned
+
+
+def validate_text_amounts_against_data(text: str, allowed_values: Set[str]) -> bool:
+    """
+    Validates that every numeric dollar amount appearing in generated text
+    matches one of the authorized ground-truth amounts in allowed_values.
+    Rejects any text where the model hallucinated or altered figures.
+    """
+    found_nums = extract_numeric_tokens(text)
+    norm_allowed = set()
+    for v in allowed_values:
+        v_str = str(v).strip().replace('$', '')
+        norm_allowed.add(v_str)
+        try:
+            d = Decimal(v_str)
+            norm_allowed.add(f"{d:.2f}")
+            norm_allowed.add(f"{d:.0f}")
+        except Exception:
+            pass
+
+    for num in found_nums:
+        # Ignore small integers likely to be page numbers, business days, or line counts
+        if num in {"1", "2", "3", "4", "5", "10", "30", "60", "90", "180"}:
+            continue
+        if num not in norm_allowed:
+            logger.warning(f"Amount validator rejected text: '{num}' not in allowed amounts: {norm_allowed}")
+            return False
+    return True
+
+
+def generate_finding_plain_explanation(
+    shipment_id: str,
+    invoice_number: str,
+    charge_code: str,
+    rule_type: str,
+    billed_amount: str,
+    expected_amount: str,
+    overcharge_amount: str,
+    contract_page: int,
+    contract_quote: str
+) -> str:
+    """
+    Generates a concise plain-language summary for carrier billing clerks.
+    Amounts are inserted directly from computed data and validated.
+    """
+    quote_snippet = f'"{contract_quote[:50]}..."' if len(contract_quote) > 50 else f'"{contract_quote}"'
+
+    if rule_type == "accessorial_rule":
+        text = (
+            f"Shipment {shipment_id} (Invoice {invoice_number}) was billed ${billed_amount} for {charge_code}, "
+            f"exceeding the contract rate of ${expected_amount} pursuant to Page {contract_page} ({quote_snippet}), "
+            f"yielding a recoverable overcharge of ${overcharge_amount}."
+        )
+    elif rule_type == "base_discount":
+        text = (
+            f"Shipment {shipment_id} was billed ${billed_amount} with an inaccurate base discount, "
+            f"whereas the contracted tariff yields ${expected_amount} (Page {contract_page}), "
+            f"resulting in a ${overcharge_amount} discrepancy."
+        )
+    elif rule_type == "duplicate_charge":
+        text = (
+            f"Shipment {shipment_id} contains duplicate billing of ${billed_amount} for charge code {charge_code}, "
+            f"creating a duplicate overcharge of ${overcharge_amount}."
+        )
+    else:
+        text = (
+            f"Discrepancy of ${overcharge_amount} on shipment {shipment_id}: billed ${billed_amount} "
+            f"diverged from contracted ${expected_amount} per contract terms on Page {contract_page}."
+        )
+
+    allowed = {billed_amount, expected_amount, overcharge_amount}
+    if not validate_text_amounts_against_data(text, allowed):
+        # Fallback to guaranteed template if check fails
+        return f"Discrepancy of ${overcharge_amount} on shipment {shipment_id} for code {charge_code}."
+    return text
+
 
 
 def generate_dispute_letter_content(
@@ -38,6 +127,18 @@ def generate_dispute_letter_content(
             if earliest_deadline is None or f.claim_deadline_date < earliest_deadline:
                 earliest_deadline = f.claim_deadline_date
 
+        plain_exp = generate_finding_plain_explanation(
+            shipment_id=f.shipment_id,
+            invoice_number=f.invoice_number,
+            charge_code=f.charge_code,
+            rule_type=f.rule_type,
+            billed_amount=f.billed_amount,
+            expected_amount=f.expected_amount,
+            overcharge_amount=f.overcharge_amount,
+            contract_page=f.contract_page or 1,
+            contract_quote=f.contract_clause_quote or ""
+        )
+
         evidence_rows.append({
             "finding_id": f.id,
             "shipment_id": f.shipment_id,
@@ -52,6 +153,7 @@ def generate_dispute_letter_content(
             "expected_amount": f.expected_amount,
             "claim_amount": f.overcharge_amount,
             "explanation": f.calculation_math,
+            "plain_explanation": plain_exp,
         })
 
     total_claim_str = f"{total_claim:.2f}"

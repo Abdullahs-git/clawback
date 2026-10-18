@@ -169,3 +169,45 @@ def get_batch_lines(
         page=page,
         limit=limit
     )
+
+
+@router.post("/normalize-descriptions")
+async def api_normalize_descriptions(
+    descriptions: List[str],
+    db: Session = Depends(get_db)
+):
+    """
+    Normalizes invoice charge descriptions to the canonical whitelist via Gemma on AMD ROCm.
+    Zero model math; pure classification validated against whitelist.
+    """
+    from backend.app.services.charge_normalization import normalize_charge_descriptions
+    result = await normalize_charge_descriptions(descriptions, db=db)
+    return {"mappings": result}
+
+
+@router.post("/{batch_id}/normalize")
+async def normalize_batch_descriptions(
+    batch_id: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Scans all distinct charge descriptions in an invoice batch and normalizes them via Gemma.
+    """
+    from backend.app.services.charge_normalization import normalize_charge_descriptions
+    lines = db.query(InvoiceLine).filter(InvoiceLine.batch_id == batch_id).all()
+    if not lines:
+        raise HTTPException(status_code=404, detail="Batch not found or contains no lines")
+
+    unique_descs = list({l.charge_description for l in lines if l.charge_description})
+    mappings = await normalize_charge_descriptions(unique_descs, db=db)
+
+    # Count how many lines mapped to canonical codes
+    normalized_count = sum(1 for d in unique_descs if mappings.get(d, {}).get("canonical_code") != "UNKNOWN")
+
+    return {
+        "batch_id": batch_id,
+        "unique_descriptions_count": len(unique_descs),
+        "normalized_count": normalized_count,
+        "mappings": mappings
+    }
+

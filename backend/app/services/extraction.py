@@ -3,6 +3,7 @@ Contract Extraction Pipeline.
 Extracts text from PDF contracts, queries Gemma via AMD endpoint,
 and runs the mandatory quote verification safeguard on every extracted rule.
 """
+import asyncio
 import io
 import json
 import logging
@@ -72,18 +73,79 @@ def extract_text_from_pdf(pdf_bytes: bytes) -> Tuple[Dict[int, str], str]:
     return pages_text_map, full_text
 
 
+def normalize_rule_parameters_key(rule: Dict[str, Any]) -> Tuple[str, str]:
+    """Generates a canonical signature for a rule to evaluate consensus across self-consistency runs."""
+    rtype = str(rule.get("type", "")).strip().lower()
+    params = rule.get("parameters", {})
+    canonical_items = []
+    if isinstance(params, dict):
+        for k, v in sorted(params.items()):
+            if isinstance(v, (int, float)):
+                val_str = f"{float(v):.4f}"
+            else:
+                val_str = str(v).strip().lower()
+            canonical_items.append(f"{k}:{val_str}")
+    return rtype, "|".join(canonical_items)
+
+
+def evaluate_self_consistency_consensus(
+    runs_results: List[Dict[str, Any]],
+    k: int = 3
+) -> List[Dict[str, Any]]:
+    """
+    Evaluates rule consensus across k parallel extraction runs.
+    Accepts a rule as high-confidence only if at least 2 runs agree on type and parameters;
+    otherwise marks it needs-review.
+    """
+    if not runs_results:
+        return []
+
+    signatures_map: Dict[Tuple[str, str], List[Dict[str, Any]]] = {}
+
+    for run_data in runs_results:
+        rules = run_data.get("rules", [])
+        for rule in rules:
+            sig = normalize_rule_parameters_key(rule)
+            if sig not in signatures_map:
+                signatures_map[sig] = []
+            signatures_map[sig].append(rule)
+
+    consensus_rules: List[Dict[str, Any]] = []
+    for sig, matching_rules in signatures_map.items():
+        agreed_count = len(matching_rules)
+        best_rule = matching_rules[0].copy()
+        best_rule["consensus_agreement_count"] = agreed_count
+        best_rule["consensus_total_runs"] = k
+
+        if agreed_count >= 2:
+            best_rule["consensus_status"] = "high_confidence"
+            best_rule["confidence"] = max(best_rule.get("confidence", 0.95), 0.95)
+        else:
+            best_rule["consensus_status"] = "needs_review"
+            best_rule["confidence"] = min(best_rule.get("confidence", 0.65), 0.65)
+            if best_rule.get("status") == "approved":
+                best_rule["status"] = "proposed"
+            best_rule["review_reason"] = f"Only {agreed_count}/{k} extraction runs agreed on parameters"
+
+        consensus_rules.append(best_rule)
+
+    return consensus_rules
+
+
 async def extract_contract_rules(
     pdf_bytes: bytes,
     filename: str,
     carrier_hint: str = "",
     db: Session = None,
-    cache_key: str = None
+    cache_key: str = None,
+    k_runs: int = 3
 ) -> Dict[str, Any]:
     """
-    Executes the full contract extraction pipeline:
+    Executes the full contract extraction pipeline with k=3 self-consistency:
     1. Parse PDF text layer
-    2. Query Gemma on AMD inference endpoint
-    3. Apply quote verification safeguard
+    2. Query Gemma k=3 in parallel on AMD inference endpoint
+    3. Reconcile consensus (requires >= 2 runs agreement)
+    4. Apply quote verification and parameter safeguard
     """
     pages_text_map, full_text = extract_text_from_pdf(pdf_bytes)
     # If no text was extracted from any page, reject as scanned image PDF
@@ -100,23 +162,41 @@ async def extract_contract_rules(
         {"role": "user", "content": prompt}
     ]
 
-    # Query LLM (live AMD or verified replay)
-    extraction_raw = await amd_llm_client.generate_chat_completion(
-        messages=messages,
-        operation="contract_extraction",
-        db=db,
-        cache_key=cache_key or f"contract_{carrier_hint.lower().replace(' ', '_')}"
-    )
+    # Run k parallel extraction calls on AMD endpoint
+    k = max(1, k_runs)
+    tasks = [
+        amd_llm_client.generate_chat_completion(
+            messages=messages,
+            operation=f"contract_extraction_run_{i+1}",
+            db=db,
+            cache_key=cache_key or f"contract_{carrier_hint.lower().replace(' ', '_')}"
+        )
+        for i in range(k)
+    ]
+
+    runs_raw = await asyncio.gather(*tasks, return_exceptions=True)
+    valid_runs: List[Dict[str, Any]] = [r for r in runs_raw if isinstance(r, dict)]
+
+    if not valid_runs:
+        raise HTTPException(
+            status_code=500,
+            detail="Contract extraction failed on all inference attempts."
+        )
+
+    # Evaluate consensus across the runs
+    merged_rules = evaluate_self_consistency_consensus(valid_runs, k=k)
 
     # Run quote verification safeguard on every proposed rule
-    rules = extraction_raw.get("rules", [])
     verified_rules = []
-    for r in rules:
+    for r in merged_rules:
         verified_rule = apply_quote_verification_safeguard(r, pages_text_map, full_text)
         verified_rules.append(verified_rule)
 
-    extraction_raw["rules"] = verified_rules
-    if carrier_hint and not extraction_raw.get("carrier_name"):
-        extraction_raw["carrier_name"] = carrier_hint
+    extraction_result = valid_runs[0].copy()
+    extraction_result["rules"] = verified_rules
+    extraction_result["self_consistency_k"] = k
+    if carrier_hint and not extraction_result.get("carrier_name"):
+        extraction_result["carrier_name"] = carrier_hint
 
-    return extraction_raw
+    return extraction_result
+
