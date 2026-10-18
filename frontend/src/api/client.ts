@@ -46,6 +46,11 @@ export const api = {
     return handleResponse<ContractDetail>(res);
   },
 
+  getContractText: async (contractId: string): Promise<{ contract_id: string; carrier_name: string; filename: string; pages: { page_number: number; text: string }[] }> => {
+    const res = await fetch(`${API_BASE}/api/contracts/${contractId}/text`);
+    return handleResponse<{ contract_id: string; carrier_name: string; filename: string; pages: { page_number: number; text: string }[] }>(res);
+  },
+
   uploadContract: async (file: File, carrierName?: string): Promise<ContractDetail> => {
     const formData = new FormData();
     formData.append('file', file);

@@ -4,15 +4,14 @@ import {
   Upload, 
   Check, 
   X, 
-  ShieldAlert, 
   ShieldCheck, 
-  Search, 
-  Plus, 
-  Edit3, 
   CheckCircle2, 
-  AlertCircle
+  AlertCircle,
+  Eye,
+  BookOpen
 } from 'lucide-react';
 import { ContractSummary, ContractDetail, ContractRule } from '../types';
+import { api } from '../api/client';
 
 interface ContractsViewProps {
   contracts: ContractSummary[];
@@ -37,6 +36,13 @@ export const ContractsView: React.FC<ContractsViewProps> = ({
   const [uploading, setUploading] = useState(false);
   const [filterType, setFilterType] = useState('all');
 
+  // Contract Viewer State
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [contractPages, setContractPages] = useState<{ page_number: number; text: string }[]>([]);
+  const [activeViewerPage, setActiveViewerPage] = useState<number>(1);
+  const [targetQuote, setTargetQuote] = useState<string>('');
+  const [loadingText, setLoadingText] = useState(false);
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     const file = e.target.files[0];
@@ -49,6 +55,60 @@ export const ContractsView: React.FC<ContractsViewProps> = ({
     } finally {
       setUploading(false);
     }
+  };
+
+  const openContractViewer = async (pageNumber: number, quote: string) => {
+    if (!selectedContract) return;
+    setTargetQuote(quote);
+    setActiveViewerPage(pageNumber);
+    setViewerOpen(true);
+    setLoadingText(true);
+    try {
+      const res = await api.getContractText(selectedContract.id);
+      setContractPages(res.pages || []);
+    } catch (err) {
+      console.error('Failed to load contract text:', err);
+    } finally {
+      setLoadingText(false);
+    }
+  };
+
+  const highlightNumbersInQuote = (quote: string) => {
+    if (!quote) return null;
+    const parts = quote.split(/(\$[\d,]+(?:\.\d{2})?|\b\d+(?:\.\d+)?%?\b|\b(?:waived|waive|no charge|not apply)\b)/gi);
+    return parts.map((part, i) => {
+      if (/^\$[\d,]+(?:\.\d{2})?$/i.test(part) || /^\d+(?:\.\d+)?%?$/i.test(part) || /^(waived|waive|no charge|not apply)$/i.test(part)) {
+        return (
+          <mark key={i} className="bg-amber-200 dark:bg-amber-900/60 dark:text-amber-200 font-bold px-1 rounded">
+            {part}
+          </mark>
+        );
+      }
+      return part;
+    });
+  };
+
+  const renderPageTextWithHighlight = (pageText: string, quote: string) => {
+    if (!quote || !pageText) return <span className="whitespace-pre-wrap">{pageText}</span>;
+    const normalizedQuote = quote.trim();
+    const idx = pageText.toLowerCase().indexOf(normalizedQuote.toLowerCase());
+    if (idx === -1) {
+      return <span className="whitespace-pre-wrap">{pageText}</span>;
+    }
+
+    const before = pageText.slice(0, idx);
+    const match = pageText.slice(idx, idx + normalizedQuote.length);
+    const after = pageText.slice(idx + normalizedQuote.length);
+
+    return (
+      <span className="whitespace-pre-wrap leading-relaxed">
+        {before}
+        <mark className="bg-emerald-300 dark:bg-emerald-800 dark:text-white font-bold px-1.5 py-0.5 rounded shadow-sm border border-emerald-400">
+          {match}
+        </mark>
+        {after}
+      </span>
+    );
   };
 
   const rules = selectedContract?.rules || [];
@@ -179,7 +239,7 @@ export const ContractsView: React.FC<ContractsViewProps> = ({
                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400'
                     }`}
                   >
-                    {st}
+                    {st === 'proposed' ? 'Needs Review' : st === 'approved' ? 'Verified' : st}
                   </button>
                 ))}
               </div>
@@ -199,7 +259,7 @@ export const ContractsView: React.FC<ContractsViewProps> = ({
                           ? 'border-rose-200 bg-rose-50/20 dark:border-rose-900/40 dark:bg-rose-950/10'
                           : isApproved
                           ? 'border-emerald-200 bg-emerald-50/20 dark:border-emerald-900/40 dark:bg-emerald-950/10'
-                          : 'border-slate-200 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-800/20'
+                          : 'border-amber-200 bg-amber-50/20 dark:border-amber-900/40 dark:bg-amber-950/10'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-3">
@@ -219,7 +279,7 @@ export const ContractsView: React.FC<ContractsViewProps> = ({
                         <div className="flex items-center gap-1.5">
                           {isApproved && (
                             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                              <CheckCircle2 className="h-3 w-3" /> Approved
+                              <CheckCircle2 className="h-3 w-3" /> Verified
                             </span>
                           )}
                           {isRejected && (
@@ -229,7 +289,7 @@ export const ContractsView: React.FC<ContractsViewProps> = ({
                           )}
                           {isProposed && (
                             <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-                              Proposed (Review Needed)
+                              Needs Review
                             </span>
                           )}
                         </div>
@@ -248,13 +308,22 @@ export const ContractsView: React.FC<ContractsViewProps> = ({
                         ))}
                       </div>
 
-                      {/* Verbatim Contract Quote Citation */}
+                      {/* Verbatim Contract Quote Citation with Highlighted Numbers */}
                       <div className="mt-3 rounded-lg border border-slate-200/80 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
-                        <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                          Verbatim Contract Clause (Page {rule.source_page}):
-                        </p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                            Verbatim Contract Clause (Page {rule.source_page}):
+                          </p>
+                          <button
+                            onClick={() => openContractViewer(rule.source_page, rule.source_quote)}
+                            className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-500 dark:text-blue-400"
+                          >
+                            <Eye className="h-3 w-3" />
+                            <span>View in Contract Text</span>
+                          </button>
+                        </div>
                         <blockquote className="mt-1 text-xs italic text-slate-700 dark:text-slate-300 border-l-2 border-emerald-500 pl-2">
-                          "{rule.source_quote}"
+                          "{highlightNumbersInQuote(rule.source_quote)}"
                         </blockquote>
                       </div>
 
@@ -296,6 +365,82 @@ export const ContractsView: React.FC<ContractsViewProps> = ({
           )}
         </div>
       </div>
+
+      {/* Contract Viewer Modal (Key Demo Moment: Grounding in Place) */}
+      {viewerOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+          <div className="flex h-[85vh] w-full max-w-4xl flex-col rounded-2xl bg-white shadow-2xl dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden">
+            {/* Viewer Header */}
+            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40">
+              <div className="flex items-center gap-2.5">
+                <BookOpen className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                    Contract Grounding Viewer — {selectedContract?.carrier_name}
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Verifying verbatim extracted quote grounded inside Page {activeViewerPage}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setViewerOpen(false)}
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Page Selector Tabs */}
+            <div className="flex items-center gap-2 border-b border-slate-200 px-6 py-2.5 dark:border-slate-800 bg-slate-100/50 dark:bg-slate-800/20 text-xs overflow-x-auto">
+              <span className="font-bold text-slate-500">Jump to Page:</span>
+              {contractPages.map((p) => (
+                <button
+                  key={p.page_number}
+                  onClick={() => setActiveViewerPage(p.page_number)}
+                  className={`rounded px-2.5 py-1 font-semibold transition ${
+                    activeViewerPage === p.page_number
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-white text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300'
+                  }`}
+                >
+                  Page {p.page_number}
+                </button>
+              ))}
+            </div>
+
+            {/* Viewer Body: Full Page Text with Quote Highlighted */}
+            <div className="flex-1 overflow-y-auto p-6 font-mono text-xs text-slate-800 dark:text-slate-200 bg-slate-50/40 dark:bg-slate-950/40">
+              {loadingText ? (
+                <div className="flex h-full items-center justify-center text-slate-400">
+                  Loading contract pages...
+                </div>
+              ) : (
+                (() => {
+                  const currentPage = contractPages.find(p => p.page_number === activeViewerPage);
+                  if (!currentPage) {
+                    return <div className="text-slate-400">Page text unavailable.</div>;
+                  }
+                  return renderPageTextWithHighlight(currentPage.text, targetQuote);
+                })()
+              )}
+            </div>
+
+            {/* Viewer Footer */}
+            <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-6 py-3 dark:border-slate-800 dark:bg-slate-800/40 text-xs">
+              <span className="text-slate-500">
+                Verbatim string check: Exact text match in document text layer
+              </span>
+              <button
+                onClick={() => setViewerOpen(false)}
+                className="rounded-lg bg-slate-900 px-4 py-1.5 font-bold text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900"
+              >
+                Close Viewer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
