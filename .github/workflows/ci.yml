@@ -37,12 +37,26 @@ jobs:
         run: |
           pytest backend/tests -v
 
-      - name: Verify Benchmark Execution
+      - name: Run Claims & Docs Integrity Check
+        run: |
+          python scripts/check_claims.py
+
+      - name: Run Frontend Integrity & Mock Leak Check
+        run: |
+          python scripts/check_frontend_integrity.py
+
+      - name: Run Deterministic Audit Gate (100% Recall, $0.00 Variance)
         env:
           PYTHONPATH: ".:rules_engine"
         run: |
-          python benchmark/generator.py
-          python benchmark/run_benchmark.py
+          python benchmark/run_audit_gate.py
+
+      - name: Verify Concurrency Benchmark
+        env:
+          PYTHONPATH: ".:rules_engine"
+        run: |
+          python benchmark/run_concurrency_benchmark.py
+
 
   frontend-build:
     name: Frontend Lint & Build

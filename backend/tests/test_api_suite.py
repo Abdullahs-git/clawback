@@ -223,3 +223,73 @@ def test_contract_not_found(client):
     resp = client.get("/api/contracts/non-existent-id")
     assert resp.status_code == 404
 
+
+def test_demo_seed_and_benchmark_endpoints(client):
+    seed_resp = client.post("/api/demo/seed")
+    assert seed_resp.status_code == 200
+    assert seed_resp.json()["status"] == "success"
+
+    bench_resp = client.get("/api/benchmark")
+    assert bench_resp.status_code == 200
+    b_data = bench_resp.json()
+    assert "audit_engine" in b_data
+    assert b_data["audit_engine"]["detected_dollars"] == "9130.51"
+
+
+def test_live_test_call_endpoint(client):
+    resp = client.post("/api/amd/live-test-call")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["status"] == "success"
+    assert "latency_ms" in data
+    assert "tokens_per_second" in data
+    assert "extracted_data" in data
+
+
+def test_charge_normalization_api_endpoints(client):
+    # Test raw list normalization
+    resp = client.post(
+        "/api/invoices/normalize-descriptions",
+        json=["RESI DLVRY", "LIFT GATE SVC", "FUEL SURCHARGE"]
+    )
+    assert resp.status_code == 200
+    mappings = resp.json()["mappings"]
+    assert mappings["RESI DLVRY"]["canonical_code"] == "RES"
+    assert mappings["LIFT GATE SVC"]["canonical_code"] == "LFG"
+    assert mappings["FUEL SURCHARGE"]["canonical_code"] == "FUEL"
+
+
+def test_contract_text_and_batch_rules(client):
+    # Upload contract
+    pdf_bytes = create_sample_contract_pdf()
+    files = {"file": ("text_test_contract.pdf", pdf_bytes, "application/pdf")}
+    upload_resp = client.post("/api/contracts/upload", files=files)
+    assert upload_resp.status_code == 201
+    cid = upload_resp.json()["id"]
+
+    # 1. Fetch text
+    text_resp = client.get(f"/api/contracts/{cid}/text")
+    assert text_resp.status_code == 200
+    t_data = text_resp.json()
+    assert len(t_data["pages"]) >= 6
+    assert "Section 3" in t_data["pages"][1]["text"]
+
+    # 2. Batch rule approval
+    rules = upload_resp.json()["rules"]
+    rule_ids = [r["id"] for r in rules]
+    batch_resp = client.post(
+        f"/api/contracts/{cid}/rules/batch",
+        json={"action": "approve", "rule_ids": rule_ids}
+    )
+    assert batch_resp.status_code == 200
+    assert batch_resp.json()["updated_count"] == len(rule_ids)
+
+    # 3. Individual rule patch
+    patch_resp = client.patch(
+        f"/api/contracts/{cid}/rules/{rule_ids[0]}",
+        json={"status": "rejected", "rejection_reason": "Manually rejected by test auditor"}
+    )
+    assert patch_resp.status_code == 200
+    assert patch_resp.json()["status"] == "rejected"
+
+
