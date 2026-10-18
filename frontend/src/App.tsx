@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
+import { LandingView } from './components/LandingView';
 import { DashboardView } from './components/DashboardView';
 import { ContractsView } from './components/ContractsView';
 import { InvoicesView } from './components/InvoicesView';
@@ -18,9 +19,12 @@ import {
 import { api } from './api/client';
 
 export function App() {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('overview');
   const [darkMode, setDarkMode] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [seeding, setSeeding] = useState(false);
+  const [benchmark, setBenchmark] = useState<any>(null);
+  const [loadingBenchmark, setLoadingBenchmark] = useState(true);
 
   // Data states
   const [amdMetrics, setAmdMetrics] = useState<AmdPanelMetrics | null>(null);
@@ -48,12 +52,13 @@ export function App() {
   const refreshAllData = async () => {
     setLoading(true);
     try {
-      const [amdRes, contractsRes, batchesRes, findingsRes, disputesRes] = await Promise.allSettled([
+      const [amdRes, contractsRes, batchesRes, findingsRes, disputesRes, benchRes] = await Promise.allSettled([
         api.getAmdStatus(),
         api.getContracts(),
         api.getInvoiceBatches(),
         api.getFindings(),
         api.getDisputes(),
+        api.getBenchmark(),
       ]);
 
       if (amdRes.status === 'fulfilled') setAmdMetrics(amdRes.value);
@@ -66,10 +71,26 @@ export function App() {
       if (batchesRes.status === 'fulfilled') setBatches(batchesRes.value);
       if (findingsRes.status === 'fulfilled') setOverview(findingsRes.value);
       if (disputesRes.status === 'fulfilled') setDisputes(disputesRes.value);
+      if (benchRes.status === 'fulfilled') {
+        setBenchmark(benchRes.value);
+        setLoadingBenchmark(false);
+      }
     } catch (err) {
       console.error('Failed to load initial data:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSeedDemo = async () => {
+    setSeeding(true);
+    try {
+      await api.seedDemo();
+      await refreshAllData();
+    } catch (err) {
+      console.error('Failed to seed demo workspace:', err);
+    } finally {
+      setSeeding(false);
     }
   };
 
@@ -136,9 +157,21 @@ export function App() {
         darkMode={darkMode}
         setDarkMode={setDarkMode}
         openFindingsCount={overview?.total_findings_count || 0}
+        onSeedDemo={handleSeedDemo}
+        seeding={seeding}
       />
 
       <main className="flex-1 mx-auto max-w-7xl px-4 py-8 sm:px-6 w-full">
+        {activeTab === 'overview' && (
+          <LandingView
+            onOpenWorkspace={() => setActiveTab('dashboard')}
+            onSeedDemo={handleSeedDemo}
+            benchmark={benchmark}
+            loadingBenchmark={loadingBenchmark}
+            seeding={seeding}
+          />
+        )}
+
         {activeTab === 'dashboard' && (
           <DashboardView
             overview={overview}

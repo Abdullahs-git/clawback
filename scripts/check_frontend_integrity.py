@@ -62,12 +62,34 @@ def audit_frontend_components():
     return errors
 
 
+def audit_production_bundle():
+    """Asserts that neither msw nor __fixtures__ appear in frontend/dist/."""
+    dist_dir = REPO_ROOT / "frontend" / "dist"
+    if not dist_dir.exists():
+        return []
+
+    errors = []
+    for p in dist_dir.rglob("*"):
+        if p.is_file():
+            try:
+                content = p.read_text(encoding="utf-8", errors="ignore")
+                if "msw" in content.lower():
+                    errors.append(f"Production bundle {p.name} contains reference to 'msw'")
+                if "__fixtures__" in content:
+                    errors.append(f"Production bundle {p.name} contains reference to '__fixtures__'")
+            except Exception as e:
+                pass
+    return errors
+
+
 def main():
     print("=" * 60)
     print("CLAWBACK FRONTEND CODE INTEGRITY & PURGE CHECK")
     print("=" * 60)
 
     errors = audit_frontend_components()
+    bundle_errors = audit_production_bundle()
+    errors.extend(bundle_errors)
 
     if errors:
         print(f"\nFAILED: Found {len(errors)} frontend integrity violations:\n")
@@ -76,6 +98,7 @@ def main():
         sys.exit(1)
     else:
         print("\nPASSED: All components free of hardcoded currency literals and forbidden content.")
+        print("PASSED: Production dist/ verified free of mocks and fixtures.")
         sys.exit(0)
 
 

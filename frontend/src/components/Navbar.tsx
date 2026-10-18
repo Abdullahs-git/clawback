@@ -8,7 +8,9 @@ import {
   Mail, 
   LayoutDashboard,
   Sun,
-  Moon
+  Moon,
+  Sparkles,
+  RefreshCw
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -19,6 +21,8 @@ interface NavbarProps {
   darkMode: boolean;
   setDarkMode: (val: boolean) => void;
   openFindingsCount: number;
+  onSeedDemo?: () => void;
+  seeding?: boolean;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -28,9 +32,12 @@ export const Navbar: React.FC<NavbarProps> = ({
   modelName,
   darkMode,
   setDarkMode,
-  openFindingsCount
+  openFindingsCount,
+  onSeedDemo,
+  seeding = false,
 }) => {
   const tabs = [
+    { id: 'overview', label: 'Overview', icon: Sparkles },
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'findings', label: 'Audit Findings', icon: AlertTriangle, badge: openFindingsCount },
     { id: 'contracts', label: 'Contracts & Rules', icon: FileText },
@@ -76,8 +83,19 @@ export const Navbar: React.FC<NavbarProps> = ({
           </span>
         </div>
 
-        {/* Dark Mode Toggle */}
+        {/* Controls: Seed Demo & Dark Mode */}
         <div className="flex items-center gap-2">
+          {onSeedDemo && (
+            <button
+              onClick={onSeedDemo}
+              disabled={seeding}
+              className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 disabled:opacity-50 transition"
+              title="Reset database and load synthetic demo workspace"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${seeding ? 'animate-spin text-emerald-500' : 'text-slate-500'}`} />
+              <span>{seeding ? 'Seeding...' : 'Reset Demo Data'}</span>
+            </button>
+          )}
           <button
             onClick={() => setDarkMode(!darkMode)}
             className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
