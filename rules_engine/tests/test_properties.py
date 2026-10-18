@@ -292,3 +292,53 @@ def test_property_line_with_no_rule_never_produces_finding():
     result = engine.audit([unknown_line])
     assert len(result.discrepancies) == 0
     assert result.total_overcharge == Decimal("0.00")
+
+
+def test_decimal_hygiene_boundary_with_imprecise_floats():
+    """
+    Section 9: Data-type hygiene test.
+    Tests boundary conversion of float artifacts (0.1, 0.2, 19.99) via Decimal(str(x)).
+    Proves binary float representation drift (e.g. 0.1 + 0.2 = 0.30000000000000004)
+    never enters or corrupts audit calculations.
+    """
+    # Verify standard IEEE float artifact
+    raw_float_sum = 0.1 + 0.2
+    assert raw_float_sum != 0.3  # IEEE 754 drift
+
+    # Engine boundary normalization: Decimal(str(value))
+    dec_01 = Decimal(str(0.1))
+    dec_02 = Decimal(str(0.2))
+    dec_1999 = Decimal(str(19.99))
+    assert dec_01 + dec_02 == Decimal("0.3")
+
+    # Accessorial rule with cap 19.99
+    rule = RuleDefinition(
+        id="R-HYGIENE-01",
+        type="accessorial_rule",
+        description="Liftgate fee capped at $19.99",
+        parameters={"fee_type": "liftgate", "cap": dec_1999, "allowed": True},
+        source_page=1,
+        source_quote="Liftgate fee capped at $19.99."
+    )
+
+    # Line billed at $20.29 (exactly 19.99 + 0.30)
+    billed_amt = dec_1999 + dec_01 + dec_02
+    line = NormalizedInvoiceLine(
+        line_id="LINE-HYG-01",
+        invoice_number="INV-HYG",
+        invoice_date="2026-09-01",
+        shipment_id="TRK-HYG",
+        charge_code="LFG",
+        amount_billed=billed_amt,  # 20.29
+    )
+
+    engine = AuditEngine([rule])
+    result = engine.audit([line])
+
+    assert len(result.discrepancies) == 1
+    finding = result.discrepancies[0]
+    # Overcharge must be EXACTLY 0.30 with zero float rounding errors
+    assert finding.overcharge_amount == Decimal("0.30")
+    assert finding.expected_amount == Decimal("19.99")
+    assert finding.billed_amount == Decimal("20.29")
+

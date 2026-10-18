@@ -33,7 +33,7 @@ def audit_accessorial(
     # Common code mappings
     type_code_map = {
         "residential": ["res", "res_del", "residential"],
-        "liftgate": ["lft", "lift", "liftgate"],
+        "liftgate": ["lft", "lift", "liftgate", "lfg"],
         "address_correction": ["addr", "addrc", "address_corr"],
         "inside_delivery": ["ins", "inside", "inside_del"],
         "saturday_delivery": ["sat", "sat_del", "saturday"],
