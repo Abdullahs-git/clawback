@@ -567,7 +567,7 @@ def render_scene_3(im, draw, f):
         draw.text((1290, 725 + ps + c3s), "$0.30 × 124.5 = $37.35", fill=TEXT_BRIGHT, font=FONT_MONO)
         draw.text((1290, 760 + ps + c3s), "+ Fuel credit = $285.15", fill=TEXT_BRIGHT, font=FONT_MONO)
 
-        draw_pill_badge(draw, "VERIFIED ✓", 1290, 810 + ps + c3s, EMERALD_BG, EMERALD, EMERALD, FONT_BADGE)
+        draw_pill_badge(draw, "100% VERIFIED", 1290, 810 + ps + c3s, EMERALD_BG, EMERALD, EMERALD, FONT_BADGE)
 
     # Bottom
     draw.text((120, 960), "100% deterministic: full audit trail from invoice to contract clause to exact refund.",
@@ -813,7 +813,7 @@ def render_poster():
     draw_card(draw, 1220, 680, 1770, 850, (12, 30, 26), EMERALD, radius=12, width=2)
     draw.text((1250, 698), "MATHEMATICAL PROOF", fill=EMERALD_LIGHT, font=FONT_BADGE_LARGE)
     draw.text((1250, 730), "+$322.50", fill=EMERALD_LIGHT, font=FONT_STAT_VAL)
-    draw_pill_badge(draw, "VERIFIED ✓", 1250, 800, EMERALD_BG, EMERALD, EMERALD, FONT_BADGE)
+    draw_pill_badge(draw, "100% VERIFIED", 1250, 800, EMERALD_BG, EMERALD, EMERALD, FONT_BADGE)
 
     # Bottom
     draw_pill_badge(draw, "AMD DEVELOPER HACKATHON: ACT III  ·  TRACK 3: REINVENT COMMERCE", 120, 920,
