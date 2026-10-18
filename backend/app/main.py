@@ -16,6 +16,7 @@ from backend.app.api.invoices import router as invoices_router
 from backend.app.api.audit import router as audit_router
 from backend.app.api.dispute import router as dispute_router
 from backend.app.api.amd_status import router as amd_status_router
+from backend.app.api.demo import router as demo_router
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
@@ -60,6 +61,7 @@ app.include_router(invoices_router)
 app.include_router(audit_router)
 app.include_router(dispute_router)
 app.include_router(amd_status_router)
+app.include_router(demo_router)
 
 
 @app.get("/health", tags=["Health"])

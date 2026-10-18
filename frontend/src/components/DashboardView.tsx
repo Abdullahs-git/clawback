@@ -28,20 +28,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onSelectFinding,
   onRunQuickAudit
 }) => {
-  const totalOvercharge = overview?.total_overcharge || '9159.31';
-  const totalFindingsCount = overview?.total_findings_count || 287;
-  const byCategory = overview?.by_category || {
-    base_discount: '3420.50',
-    accessorial_rule: '2150.00',
-    fuel_surcharge: '1840.81',
-    duplicate_charge: '1248.00',
-    minimum_charge: '500.00'
-  };
-  const byCarrier = overview?.by_carrier || {
-    'Apex Freight Logistics': '4820.50',
-    'Beacon Express Transport': '2710.25',
-    'Crestline Cargo Partners': '1628.56'
-  };
+  const totalOvercharge = overview?.total_overcharge ?? '0.00';
+  const totalFindingsCount = overview?.total_findings_count ?? 0;
+  const byCategory = overview?.by_category ?? {};
+  const byCarrier = overview?.by_carrier ?? {};
 
   const categoryLabels: Record<string, string> = {
     base_discount: 'Base Discount Errors',
@@ -113,19 +103,25 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
 
           <div className="mt-4 space-y-3">
-            {Object.entries(byCategory).map(([catKey, amount]) => (
-              <div key={catKey} className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    {categoryLabels[catKey] || catKey}
+            {Object.entries(byCategory).length > 0 ? (
+              Object.entries(byCategory).map(([catKey, amount]) => (
+                <div key={catKey} className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      {categoryLabels[catKey] || catKey}
+                    </span>
+                  </div>
+                  <span className="text-sm font-bold tabular-nums text-slate-900 dark:text-white">
+                    ${amount}
                   </span>
                 </div>
-                <span className="text-sm font-bold tabular-nums text-slate-900 dark:text-white">
-                  ${amount}
-                </span>
+              ))
+            ) : (
+              <div className="py-6 text-center text-xs text-slate-400">
+                No category overcharges found. Run audit to generate findings.
               </div>
-            ))}
+            )}
           </div>
         </div>
 
@@ -142,16 +138,22 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
 
           <div className="mt-4 space-y-3">
-            {Object.entries(byCarrier).map(([carrier, amount]) => (
-              <div key={carrier} className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  {carrier}
-                </span>
-                <span className="text-sm font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
-                  ${amount}
-                </span>
+            {Object.entries(byCarrier).length > 0 ? (
+              Object.entries(byCarrier).map(([carrier, amount]) => (
+                <div key={carrier} className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    {carrier}
+                  </span>
+                  <span className="text-sm font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
+                    ${amount}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <div className="py-6 text-center text-xs text-slate-400">
+                No carrier overcharges found. Run audit to generate findings.
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>

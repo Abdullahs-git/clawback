@@ -132,7 +132,7 @@ export const api = {
       body: JSON.stringify({
         batch_id: batchId,
         carrier_name: carrierName,
-        shipper_name: shipperName || 'Acme Shipper Operations',
+        shipper_name: shipperName || 'Shipper Logistics & Operations',
       }),
     });
     return handleResponse<DisputeLetter>(res);
@@ -154,5 +154,18 @@ export const api = {
 
   getExportUrl: (letterId: string, format: 'markdown' | 'pdf'): string => {
     return `${API_BASE}/api/disputes/${letterId}/export?format=${format}`;
+  },
+
+  // Demo & Benchmark
+  seedDemo: async (): Promise<{ status: string; message: string }> => {
+    const res = await fetch(`${API_BASE}/api/demo/seed`, {
+      method: 'POST',
+    });
+    return handleResponse<{ status: string; message: string }>(res);
+  },
+
+  getBenchmark: async (): Promise<any> => {
+    const res = await fetch(`${API_BASE}/api/benchmark`);
+    return handleResponse<any>(res);
   }
 };

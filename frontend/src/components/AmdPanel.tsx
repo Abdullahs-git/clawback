@@ -95,7 +95,7 @@ export const AmdPanel: React.FC<AmdPanelProps> = ({ metrics, loading, onRefresh 
             <div>
               <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Average Latency</p>
               <p className="text-lg font-bold tabular-nums text-slate-900 dark:text-white">
-                {metrics?.average_latency_ms || 642.5} ms
+                {metrics?.average_latency_ms !== undefined ? `${metrics.average_latency_ms.toFixed(1)} ms` : '-'}
               </p>
             </div>
           </div>
@@ -110,7 +110,7 @@ export const AmdPanel: React.FC<AmdPanelProps> = ({ metrics, loading, onRefresh 
             <div>
               <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Tokens / Second</p>
               <p className="text-lg font-bold tabular-nums text-slate-900 dark:text-white">
-                ~{metrics?.average_tokens_per_second || 58.5} tps
+                {metrics?.average_tokens_per_second !== undefined ? `~${metrics.average_tokens_per_second.toFixed(1)} tps` : '-'}
               </p>
             </div>
           </div>
@@ -134,7 +134,7 @@ export const AmdPanel: React.FC<AmdPanelProps> = ({ metrics, loading, onRefresh 
       <div className="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="border-b border-slate-200 px-6 py-4 dark:border-slate-800 flex items-center justify-between">
           <h3 className="text-sm font-bold text-slate-900 dark:text-white">Recent AMD Inference Logs</h3>
-          <span className="text-xs text-slate-500 dark:text-slate-400">Total Calls: {metrics?.total_calls || 3}</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400">Total Calls: {metrics?.total_calls ?? 0}</span>
         </div>
 
         <div className="overflow-x-auto">

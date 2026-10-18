@@ -247,95 +247,156 @@ export const AuditView: React.FC<AuditViewProps> = ({
         </div>
       </div>
 
-      {/* Drilldown Traceability Modal */}
+      {/* Drilldown Traceability Side Panel (Non-blocking slide-over) */}
       {selectedFinding && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 dark:border-slate-800">
-              <div>
+        <div className="fixed inset-y-0 right-0 z-50 flex w-full max-w-4xl flex-col bg-white shadow-2xl dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 transition-all duration-300">
+          {/* Panel Header */}
+          <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                  Audit Proof
+                </span>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                  Audit Discrepancy Evidence & Mathematical Proof
+                  Finding {selectedFinding.finding_id.slice(0, 8)}: Shipment {selectedFinding.shipment_id}
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Shipment: <strong className="font-mono text-slate-800 dark:text-slate-200">{selectedFinding.shipment_id}</strong> | Finding ID: {selectedFinding.finding_id.slice(0, 8)}
-                </p>
               </div>
-              <button
-                onClick={onCloseDrilldown}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-              >
-                <X className="h-5 w-5" />
-              </button>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Carrier: <strong className="text-slate-700 dark:text-slate-300">{selectedFinding.carrier_name}</strong> | Invoice: <strong className="font-mono text-slate-700 dark:text-slate-300">{selectedFinding.invoice_number}</strong>
+              </p>
             </div>
+            <button
+              onClick={onCloseDrilldown}
+              className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              title="Close side panel"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
 
-            {/* Modal Body */}
-            <div className="p-6 space-y-5 text-xs text-slate-700 dark:text-slate-300">
+          {/* Overcharge Summary Banner */}
+          <div className="flex items-center justify-between bg-emerald-50 px-6 py-3 border-b border-emerald-100 dark:bg-emerald-950/30 dark:border-emerald-900/50">
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                Net Overcharge Claimed
+              </span>
+              <div className="text-2xl font-black tabular-nums text-emerald-800 dark:text-emerald-300">
+                +${selectedFinding.overcharge_amount} USD
+              </div>
+            </div>
+            <div className="text-right text-xs">
+              <span className="text-slate-500 dark:text-slate-400">Claim Window: </span>
+              <strong className="text-slate-900 dark:text-white font-mono">
+                {selectedFinding.days_remaining_to_claim !== null && selectedFinding.days_remaining_to_claim !== undefined
+                  ? `${selectedFinding.days_remaining_to_claim} days remaining`
+                  : 'Contract standard (180d)'}
+              </strong>
+              {selectedFinding.claim_deadline_date && (
+                <p className="text-[11px] text-slate-400">Deadline: {selectedFinding.claim_deadline_date}</p>
+              )}
+            </div>
+          </div>
+
+          {/* 3-Column Proof Body */}
+          <div className="flex-1 overflow-y-auto p-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
               
-              {/* Overcharge Banner */}
-              <div className="flex items-center justify-between rounded-xl bg-emerald-50 p-4 border border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-800">
-                <div>
-                  <span className="text-[11px] font-bold uppercase text-emerald-800 dark:text-emerald-300">
-                    Calculated Overcharge Claim
-                  </span>
-                  <div className="text-2xl font-black tabular-nums text-emerald-700 dark:text-emerald-400">
-                    +${selectedFinding.overcharge_amount} USD
+              {/* Column 1: The Invoice Line */}
+              <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-800/30 space-y-3">
+                <div className="flex items-center gap-1.5 font-bold text-slate-900 dark:text-white border-b border-slate-200 pb-2 dark:border-slate-700">
+                  <FileText className="h-4 w-4 text-slate-500" />
+                  <span>1. The Invoice Line</span>
+                </div>
+                <div className="space-y-2">
+                  <div>
+                    <span className="text-slate-400 block text-[11px]">Billed Charge Code:</span>
+                    <span className="font-mono font-bold text-slate-900 dark:text-white rounded bg-slate-200/60 dark:bg-slate-700 px-1.5 py-0.5">
+                      {selectedFinding.charge_code}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[11px]">Amount Billed:</span>
+                    <span className="text-base font-bold tabular-nums text-slate-900 dark:text-white">
+                      ${selectedFinding.billed_amount}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[11px]">Shipment Reference:</span>
+                    <span className="font-mono text-slate-700 dark:text-slate-300">{selectedFinding.shipment_id}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[11px]">Invoice Number:</span>
+                    <span className="font-mono text-slate-700 dark:text-slate-300">{selectedFinding.invoice_number}</span>
                   </div>
                 </div>
-                <div className="text-right text-xs">
-                  <p>Billed: <strong>${selectedFinding.billed_amount}</strong></p>
-                  <p>Contract Expected: <strong>${selectedFinding.expected_amount}</strong></p>
+              </div>
+
+              {/* Column 2: The Contract Quote & Citation */}
+              <div className="rounded-xl border border-blue-200 bg-blue-50/30 p-4 dark:border-blue-900/40 dark:bg-blue-950/20 space-y-3">
+                <div className="flex items-center gap-1.5 font-bold text-slate-900 dark:text-white border-b border-blue-200 pb-2 dark:border-blue-800/60">
+                  <ShieldCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  <span>2. Contract Quote Citation</span>
+                </div>
+                <div className="space-y-2">
+                  <div>
+                    <span className="text-slate-400 block text-[11px]">Governing Rule:</span>
+                    <span className="font-bold text-blue-700 dark:text-blue-300">{selectedFinding.rule_description}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[11px]">Contract Page:</span>
+                    <span className="font-mono font-semibold text-slate-700 dark:text-slate-300">Page {selectedFinding.contract_page}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[11px]">Verbatim Contract Clause:</span>
+                    <blockquote className="italic border-l-2 border-blue-500 pl-2 text-slate-700 dark:text-slate-300 bg-white/70 dark:bg-slate-800/60 p-2 rounded text-[11px] mt-1">
+                      "{selectedFinding.contract_clause_quote}"
+                    </blockquote>
+                  </div>
                 </div>
               </div>
 
-              {/* Step-by-Step Math Proof */}
-              <div>
-                <h4 className="font-bold text-slate-900 dark:text-white mb-1.5 flex items-center gap-1.5">
-                  <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                  Deterministic Calculation Proof:
-                </h4>
-                <div className="rounded-lg bg-slate-50 p-3 font-mono text-xs border border-slate-200 dark:bg-slate-800 dark:border-slate-700 text-slate-800 dark:text-slate-200">
-                  {selectedFinding.calculation_math}
+              {/* Column 3: The Arithmetic Proof */}
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50/30 p-4 dark:border-emerald-900/40 dark:bg-emerald-950/20 space-y-3">
+                <div className="flex items-center gap-1.5 font-bold text-slate-900 dark:text-white border-b border-emerald-200 pb-2 dark:border-emerald-800/60">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                  <span>3. Arithmetic Calculation</span>
+                </div>
+                <div className="space-y-2">
+                  <div>
+                    <span className="text-slate-400 block text-[11px]">Contract Expected:</span>
+                    <span className="text-base font-bold tabular-nums text-slate-900 dark:text-white">
+                      ${selectedFinding.expected_amount}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[11px]">Overcharge Amount:</span>
+                    <span className="text-base font-black tabular-nums text-emerald-700 dark:text-emerald-400">
+                      ${selectedFinding.overcharge_amount}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[11px]">Step-by-Step Formula:</span>
+                    <div className="font-mono text-[11px] bg-white/80 dark:bg-slate-800/80 p-2 rounded border border-emerald-200 dark:border-emerald-800/50 text-slate-800 dark:text-slate-200">
+                      {selectedFinding.calculation_math}
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Verbatim Contract Clause Citation */}
-              <div>
-                <h4 className="font-bold text-slate-900 dark:text-white mb-1.5 flex items-center gap-1.5">
-                  <FileText className="h-4 w-4 text-blue-600" />
-                  Governing Contract Clause (Page {selectedFinding.contract_page}):
-                </h4>
-                <blockquote className="rounded-lg bg-slate-50 p-3 text-xs italic border-l-4 border-blue-500 border border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:border-l-blue-500">
-                  "{selectedFinding.contract_clause_quote}"
-                </blockquote>
-              </div>
-
-              {/* Metadata Grid */}
-              <div className="grid grid-cols-2 gap-3 text-xs pt-2 border-t border-slate-100 dark:border-slate-800">
-                <div>
-                  <span className="text-slate-400">Carrier:</span> <strong className="text-slate-800 dark:text-slate-200">{selectedFinding.carrier_name}</strong>
-                </div>
-                <div>
-                  <span className="text-slate-400">Invoice Number:</span> <strong className="font-mono text-slate-800 dark:text-slate-200">{selectedFinding.invoice_number}</strong>
-                </div>
-                <div>
-                  <span className="text-slate-400">Charge Code:</span> <strong className="font-mono text-slate-800 dark:text-slate-200">{selectedFinding.charge_code}</strong>
-                </div>
-                <div>
-                  <span className="text-slate-400">Claim Window:</span> <strong className="text-slate-800 dark:text-slate-200">{selectedFinding.days_remaining_to_claim ?? 180} days remaining</strong>
-                </div>
-              </div>
             </div>
+          </div>
 
-            {/* Modal Footer */}
-            <div className="flex items-center justify-end border-t border-slate-100 bg-slate-50 px-6 py-3 dark:border-slate-800 dark:bg-slate-800/40">
-              <button
-                onClick={onCloseDrilldown}
-                className="rounded-lg bg-slate-900 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900"
-              >
-                Close Traceability Proof
-              </button>
-            </div>
+          {/* Panel Footer */}
+          <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-6 py-3 dark:border-slate-800 dark:bg-slate-800/40">
+            <span className="text-xs text-slate-500">
+              Deterministic Python Decimal calculation • Zero LLM math
+            </span>
+            <button
+              onClick={onCloseDrilldown}
+              className="rounded-lg bg-slate-900 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900"
+            >
+              Close Side Panel
+            </button>
           </div>
         </div>
       )}
